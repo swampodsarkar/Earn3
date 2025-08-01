@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Earn - Telegram WebApp</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+</head>
+<body class="bg-gray-100">
+
+<!-- Loading Screen -->
+<div id="loadingScreen" class="h-screen flex items-center justify-center text-lg font-bold">
+  Connecting to Telegram...
+</div>
+
+<!-- Main App -->
+<div id="appScreen" class="hidden flex flex-col h-screen">
+  <!-- Header -->
+  <div class="bg-white shadow p-4 flex justify-between items-center">
+    <div>
+      <h2 id="displayName" class="font-bold text-lg">User</h2>
+      <p id="balanceDisplay" class="text-sm text-gray-600">Balance: 0 Coins</p>
+    </div>
+    <button onclick="logoutUser()" class="bg-red-500 text-white px-3 py-1 rounded">Logout</button>
+  </div>
+
+  <!-- Task List -->
+  <div id="taskList" class="flex-1 overflow-y-auto p-4">
+    <h3 class="font-bold text-xl mb-4">Available Tasks</h3>
+    <div id="tasksContainer" class="space-y-4"></div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bg-white shadow p-2 text-center">
+    <button onclick="claimDaily()" class="bg-green-500 text-white px-4 py-2 rounded">Daily Reward</button>
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDX7Z8o5xVJa8cSHvaurZg4FkJvN8mJuto",
+  authDomain: "free-fire-kingdom.firebaseapp.com",
+  databaseURL: "https://free-fire-kingdom-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "free-fire-kingdom",
+  storageBucket: "free-fire-kingdom.appspot.com",
+  messagingSenderId: "889375613179",
+  appId: "1:889375613179:web:b36bd72dd208b101e0d05e",
+  measurementId: "G-0EWSZ3SFX1"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const tg = window.Telegram.WebApp;
+tg.expand();
+
+let currentUser = null;
+
+function autoLoginFromTelegram() {
+  const tgUser = tg.initDataUnsafe?.user;
+  if (!tgUser) {
+    document.getElementById('loadingScreen').innerText = "Open this from Telegram Bot.";
+    return;
+  }
+  const username = tgUser.username || ("tguser_" + tgUser.id);
+  const userRef = db.ref('users/' + username);
+
+  userRef.once('value', snapshot => {
+    if (!snapshot.exists()) {
+      userRef.set({ balance: 0, lastClaim: 0 });
+    }
+    currentUser = username;
+    localStorage.setItem('loggedUser', username);
+    loadUser();
+  });
+}
+
+function loadUser() {
+  document.getElementById('loadingScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('hidden');
+  document.getElementById('displayName').innerText = currentUser;
+  updateBalance();
+  loadTasks();
+}
+
+function updateBalance() {
+  db.ref('users/' + currentUser + '/balance').on('value', snap => {
+    const balance = snap.val() || 0;
+    document.getElementById('balanceDisplay').innerText = 'Balance: ' + balance + ' Coins';
+  });
+}
+
+function loadTasks() {
+  db.ref('tasks').once('value', snap => {
+    const tasks = snap.val() || {};
+    const container = document.getElementById('tasksContainer');
+    container.innerHTML = "";
+    Object.keys(tasks).forEach(taskId => {
+      const task = tasks[taskId];
+      const div = document.createElement('div');
+      div.className = "bg-white p-4 rounded shadow";
+      div.innerHTML = `
+        <h4 class="font-bold">${task.title}</h4>
+        <p class="text-sm mb-2">Reward: ${task.reward} Coins</p>
+        <button onclick="submitTask('${taskId}')" class="bg-blue-500 text-white px-3 py-1 rounded">Complete Task</button>
+      `;
+      container.appendChild(div);
+    });
+  });
+}
+
+function submitTask(taskId) {
+  const submissionId = Date.now();
+  db.ref('submissions/' + submissionId).set({
+    user: currentUser,
+    task: taskId,
+    status: "pending"
+  });
+  alert("Task submitted for review!");
+}
+
+function claimDaily() {
+  const now = Date.now();
+  db.ref('users/' + currentUser).once('value', snap => {
+    const data = snap.val();
+    if (now - data.lastClaim < 86400000) {
+      alert("Already claimed today!");
+      return;
+    }
+    db.ref('users/' + currentUser).update({
+      balance: (data.balance || 0) + 1,
+      lastClaim: now
+    });
+    alert("Daily reward claimed!");
+  });
+}
+
+function logoutUser() {
+  localStorage.removeItem('loggedUser');
+  location.reload();
+}
+
+const savedUser = localStorage.getItem('loggedUser');
+if (savedUser) {
+  currentUser = savedUser;
+  loadUser();
+} else {
+  autoLoginFromTelegram();
+}
+</script>
+</body>
+</html>
