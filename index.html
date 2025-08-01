@@ -1,154 +1,612 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Task Earn - Telegram WebApp</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskEarn - Telegram WebApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 font-sans">
 
 <!-- Loading Screen -->
-<div id="loadingScreen" class="h-screen flex items-center justify-center text-lg font-bold">
-  Connecting to Telegram...
+<div id="loadingScreen" class="h-screen flex flex-col items-center justify-center text-lg font-bold bg-indigo-600 text-white">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mb-4"></div>
+    <p>Connecting to Telegram...</p>
 </div>
 
 <!-- Main App -->
 <div id="appScreen" class="hidden flex flex-col h-screen">
-  <!-- Header -->
-  <div class="bg-white shadow p-4 flex justify-between items-center">
-    <div>
-      <h2 id="displayName" class="font-bold text-lg">User</h2>
-      <p id="balanceDisplay" class="text-sm text-gray-600">Balance: 0 Coins</p>
+    <!-- Header -->
+    <div class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md">
+        <div>
+            <h2 id="displayName" class="font-bold text-lg flex items-center">
+                <i class="fas fa-user-circle mr-2"></i>
+                <span>User</span>
+            </h2>
+            <p id="balanceDisplay" class="text-sm opacity-90">
+                <i class="fas fa-coins mr-1"></i> Balance: 0 Coins
+            </p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button onclick="showWithdrawModal()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg flex items-center">
+                <i class="fas fa-wallet mr-1"></i> Withdraw
+            </button>
+            <button onclick="logoutUser()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg flex items-center">
+                <i class="fas fa-sign-out-alt mr-1"></i> Logout
+            </button>
+        </div>
     </div>
-    <button onclick="logoutUser()" class="bg-red-500 text-white px-3 py-1 rounded">Logout</button>
-  </div>
 
-  <!-- Task List -->
-  <div id="taskList" class="flex-1 overflow-y-auto p-4">
-    <h3 class="font-bold text-xl mb-4">Available Tasks</h3>
-    <div id="tasksContainer" class="space-y-4"></div>
-  </div>
+    <!-- Notification Banner -->
+    <div id="notificationBanner" class="hidden bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-3">
+        <div class="flex justify-between items-center">
+            <p id="notificationText"></p>
+            <button onclick="hideNotification()" class="text-blue-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
 
-  <!-- Bottom Nav -->
-  <div class="bg-white shadow p-2 text-center">
-    <button onclick="claimDaily()" class="bg-green-500 text-white px-4 py-2 rounded">Daily Reward</button>
-  </div>
+    <!-- Main Content -->
+    <div class="flex-1 overflow-y-auto">
+        <!-- Balance Card -->
+        <div class="bg-white mx-4 mt-4 p-4 rounded-lg shadow-md">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-gray-500 text-sm">Total Balance</h3>
+                    <p id="mainBalance" class="text-2xl font-bold">0 Coins</p>
+                </div>
+                <div class="bg-indigo-100 p-3 rounded-full">
+                    <i class="fas fa-coins text-indigo-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Reward Section -->
+        <div class="mx-4 mt-4">
+            <button onclick="claimDaily()" id="dailyButton" class="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all">
+                <i class="fas fa-gift mr-2"></i> Claim Daily Reward (10 Coins)
+            </button>
+        </div>
+
+        <!-- Task List -->
+        <div class="mx-4 mt-6">
+            <h3 class="font-bold text-xl mb-3 flex items-center">
+                <i class="fas fa-tasks mr-2 text-indigo-600"></i> Available Tasks
+            </h3>
+            <div id="tasksContainer" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <div class="bg-white border-t border-gray-200 p-3 flex justify-around">
+        <button onclick="showTaskSection()" class="flex flex-col items-center text-indigo-600">
+            <i class="fas fa-tasks text-xl"></i>
+            <span class="text-xs mt-1">Tasks</span>
+        </button>
+        <button onclick="showHistorySection()" class="flex flex-col items-center text-gray-500">
+            <i class="fas fa-history text-xl"></i>
+            <span class="text-xs mt-1">History</span>
+        </button>
+        <button onclick="showProfileSection()" class="flex flex-col items-center text-gray-500">
+            <i class="fas fa-user text-xl"></i>
+            <span class="text-xs mt-1">Profile</span>
+        </button>
+    </div>
+</div>
+
+<!-- Withdraw Modal -->
+<div id="withdrawModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-11/12 max-w-md">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-xl">Withdraw Coins</h3>
+            <button onclick="hideWithdrawModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Amount (Min 100 Coins)</label>
+            <input type="number" id="withdrawAmount" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter amount">
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Telegram Username</label>
+            <input type="text" id="withdrawUsername" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="@username">
+        </div>
+        <button onclick="submitWithdraw()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold">
+            Submit Withdraw Request
+        </button>
+    </div>
+</div>
+
+<!-- Task History Section (Hidden by default) -->
+<div id="historySection" class="hidden flex flex-col h-screen">
+    <div class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md">
+        <button onclick="hideHistorySection()" class="flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i> Back
+        </button>
+        <h2 class="font-bold text-lg">Task History</h2>
+        <div class="w-6"></div> <!-- Spacer for alignment -->
+    </div>
+    <div class="flex-1 overflow-y-auto p-4">
+        <div id="historyContainer" class="space-y-3">
+            <!-- History items will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Profile Section (Hidden by default) -->
+<div id="profileSection" class="hidden flex flex-col h-screen">
+    <div class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md">
+        <button onclick="hideProfileSection()" class="flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i> Back
+        </button>
+        <h2 class="font-bold text-lg">My Profile</h2>
+        <div class="w-6"></div> <!-- Spacer for alignment -->
+    </div>
+    <div class="flex-1 overflow-y-auto p-4">
+        <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="bg-indigo-100 p-3 rounded-full">
+                    <i class="fas fa-user text-indigo-600 text-2xl"></i>
+                </div>
+                <div>
+                    <h3 id="profileUsername" class="font-bold text-lg">@username</h3>
+                    <p class="text-gray-600 text-sm">Joined 2 days ago</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <p class="text-gray-500 text-sm">Total Earned</p>
+                    <p id="totalEarned" class="font-bold">0 Coins</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <p class="text-gray-500 text-sm">Withdrawn</p>
+                    <p id="totalWithdrawn" class="font-bold">0 Coins</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <h3 class="font-bold mb-3">Account Information</h3>
+            <div class="space-y-3">
+                <div>
+                    <p class="text-gray-500 text-sm">Telegram ID</p>
+                    <p id="tgUserId" class="font-medium">123456789</p>
+                </div>
+                <div>
+                    <p class="text-gray-500 text-sm">Status</p>
+                    <p id="accountStatus" class="font-medium text-green-600">Active</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDX7Z8o5xVJa8cSHvaurZg4FkJvN8mJuto",
-  authDomain: "free-fire-kingdom.firebaseapp.com",
-  databaseURL: "https://free-fire-kingdom-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "free-fire-kingdom",
-  storageBucket: "free-fire-kingdom.appspot.com",
-  messagingSenderId: "889375613179",
-  appId: "1:889375613179:web:b36bd72dd208b101e0d05e",
-  measurementId: "G-0EWSZ3SFX1"
+    apiKey: "AIzaSyDX7Z8o5xVJa8cSHvaurZg4FkJvN8mJuto",
+    authDomain: "free-fire-kingdom.firebaseapp.com",
+    databaseURL: "https://free-fire-kingdom-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "free-fire-kingdom",
+    storageBucket: "free-fire-kingdom.appspot.com",
+    messagingSenderId: "889375613179",
+    appId: "1:889375613179:web:b36bd72dd208b101e0d05e",
+    measurementId: "G-0EWSZ3SFX1"
 };
+
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// Telegram WebApp initialization
 const tg = window.Telegram.WebApp;
 tg.expand();
 
 let currentUser = null;
+let userData = {};
+let tgUserData = {};
 
+// Initialize the app
+function initApp() {
+    const savedUser = localStorage.getItem('loggedUser');
+    if (savedUser) {
+        currentUser = savedUser;
+        loadUser();
+    } else {
+        autoLoginFromTelegram();
+    }
+    
+    // Listen for global notifications
+    db.ref('notifications').limitToLast(1).on('child_added', snapshot => {
+        const notification = snapshot.val();
+        showNotification(notification.message);
+    });
+}
+
+// Auto login from Telegram
 function autoLoginFromTelegram() {
-  const tgUser = tg.initDataUnsafe?.user;
-  if (!tgUser) {
-    document.getElementById('loadingScreen').innerText = "Open this from Telegram Bot.";
-    return;
-  }
-  const username = tgUser.username || ("tguser_" + tgUser.id);
-  const userRef = db.ref('users/' + username);
-
-  userRef.once('value', snapshot => {
-    if (!snapshot.exists()) {
-      userRef.set({ balance: 0, lastClaim: 0 });
+    const tgUser = tg.initDataUnsafe?.user;
+    if (!tgUser) {
+        document.getElementById('loadingScreen').innerHTML = `
+            <div class="text-center p-4">
+                <i class="fas fa-exclamation-triangle text-3xl text-yellow-400 mb-3"></i>
+                <p class="text-lg">Please open this app from the Telegram bot</p>
+                <button onclick="location.reload()" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-sync-alt mr-2"></i> Try Again
+                </button>
+            </div>
+        `;
+        return;
     }
-    currentUser = username;
-    localStorage.setItem('loggedUser', username);
-    loadUser();
-  });
+    
+    tgUserData = {
+        id: tgUser.id,
+        username: tgUser.username || ("tguser_" + tgUser.id),
+        first_name: tgUser.first_name,
+        last_name: tgUser.last_name
+    };
+    
+    const userRef = db.ref('users/' + tgUserData.username);
+    
+    userRef.once('value', snapshot => {
+        if (!snapshot.exists()) {
+            // New user
+            userRef.set({ 
+                balance: 0,
+                totalEarned: 0,
+                totalWithdrawn: 0,
+                lastClaim: 0,
+                status: "active",
+                joinedAt: Date.now(),
+                tgUserId: tgUser.id,
+                firstName: tgUser.first_name,
+                lastName: tgUser.last_name
+            });
+        } else {
+            // Existing user - check if banned
+            const userData = snapshot.val();
+            if (userData.status === "banned") {
+                document.getElementById('loadingScreen').innerHTML = `
+                    <div class="text-center p-4">
+                        <i class="fas fa-ban text-3xl text-red-500 mb-3"></i>
+                        <p class="text-lg">Your account has been banned</p>
+                        <p class="text-sm text-gray-300 mt-2">Contact support for more information</p>
+                    </div>
+                `;
+                return;
+            }
+        }
+        
+        currentUser = tgUserData.username;
+        localStorage.setItem('loggedUser', currentUser);
+        loadUser();
+    });
 }
 
+// Load user data
 function loadUser() {
-  document.getElementById('loadingScreen').classList.add('hidden');
-  document.getElementById('appScreen').classList.remove('hidden');
-  document.getElementById('displayName').innerText = currentUser;
-  updateBalance();
-  loadTasks();
+    document.getElementById('loadingScreen').classList.add('hidden');
+    document.getElementById('appScreen').classList.remove('hidden');
+    
+    // Update UI with user data
+    document.getElementById('displayName').textContent = tgUserData.first_name || currentUser;
+    
+    // Listen for user data changes
+    db.ref('users/' + currentUser).on('value', snapshot => {
+        userData = snapshot.val() || {};
+        
+        // Update balance displays
+        document.getElementById('balanceDisplay').innerHTML = `
+            <i class="fas fa-coins mr-1"></i> Balance: ${userData.balance || 0} Coins
+        `;
+        document.getElementById('mainBalance').textContent = `${userData.balance || 0} Coins`;
+        
+        // Update profile section if visible
+        if (!document.getElementById('profileSection').classList.contains('hidden')) {
+            updateProfileSection();
+        }
+    });
+    
+    loadTasks();
+    loadTaskHistory();
 }
 
-function updateBalance() {
-  db.ref('users/' + currentUser + '/balance').on('value', snap => {
-    const balance = snap.val() || 0;
-    document.getElementById('balanceDisplay').innerText = 'Balance: ' + balance + ' Coins';
-  });
-}
-
+// Load available tasks
 function loadTasks() {
-  db.ref('tasks').once('value', snap => {
-    const tasks = snap.val() || {};
-    const container = document.getElementById('tasksContainer');
-    container.innerHTML = "";
-    Object.keys(tasks).forEach(taskId => {
-      const task = tasks[taskId];
-      const div = document.createElement('div');
-      div.className = "bg-white p-4 rounded shadow";
-      div.innerHTML = `
-        <h4 class="font-bold">${task.title}</h4>
-        <p class="text-sm mb-2">Reward: ${task.reward} Coins</p>
-        <button onclick="submitTask('${taskId}')" class="bg-blue-500 text-white px-3 py-1 rounded">Complete Task</button>
-      `;
-      container.appendChild(div);
+    db.ref('tasks').orderByChild('active').equalTo(true).once('value', snap => {
+        const tasks = snap.val() || {};
+        const container = document.getElementById('tasksContainer');
+        container.innerHTML = "";
+        
+        if (Object.keys(tasks).length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-tasks text-4xl mb-3 opacity-30"></i>
+                    <p>No tasks available at the moment</p>
+                    <p class="text-sm mt-2">Check back later for new tasks</p>
+                </div>
+            `;
+            return;
+        }
+        
+        Object.keys(tasks).forEach(taskId => {
+            const task = tasks[taskId];
+            const div = document.createElement('div');
+            div.className = "bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-all";
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-bold text-lg">${task.title}</h4>
+                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">+${task.reward} Coins</span>
+                </div>
+                <p class="text-gray-600 text-sm mb-3">${task.description || 'Complete this task to earn coins'}</p>
+                <button onclick="submitTask('${taskId}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium">
+                    <i class="fas fa-check-circle mr-2"></i> Complete Task
+                </button>
+            `;
+            container.appendChild(div);
+        });
     });
-  });
 }
 
+// Submit a task for review
 function submitTask(taskId) {
-  const submissionId = Date.now();
-  db.ref('submissions/' + submissionId).set({
-    user: currentUser,
-    task: taskId,
-    status: "pending"
-  });
-  alert("Task submitted for review!");
-}
-
-function claimDaily() {
-  const now = Date.now();
-  db.ref('users/' + currentUser).once('value', snap => {
-    const data = snap.val();
-    if (now - data.lastClaim < 86400000) {
-      alert("Already claimed today!");
-      return;
-    }
-    db.ref('users/' + currentUser).update({
-      balance: (data.balance || 0) + 1,
-      lastClaim: now
+    const submissionId = Date.now();
+    db.ref('submissions/' + submissionId).set({
+        user: currentUser,
+        taskId: taskId,
+        status: "pending",
+        submittedAt: Date.now(),
+        tgUserId: tgUserData.id,
+        username: currentUser
+    }).then(() => {
+        showNotification("Task submitted for review!");
     });
-    alert("Daily reward claimed!");
-  });
 }
 
+// Load task history
+function loadTaskHistory() {
+    db.ref('submissions').orderByChild('user').equalTo(currentUser).limitToLast(20).once('value', snap => {
+        const submissions = snap.val() || {};
+        const container = document.getElementById('historyContainer');
+        container.innerHTML = "";
+        
+        if (Object.keys(submissions).length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-history text-4xl mb-3 opacity-30"></i>
+                    <p>No task history yet</p>
+                    <p class="text-sm mt-2">Complete tasks to see them here</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Get task names first
+        db.ref('tasks').once('value', taskSnap => {
+            const allTasks = taskSnap.val() || {};
+            
+            Object.keys(submissions).reverse().forEach(subId => {
+                const submission = submissions[subId];
+                const task = allTasks[submission.taskId] || { title: "Unknown Task" };
+                
+                const div = document.createElement('div');
+                div.className = "bg-white p-4 rounded-lg shadow-sm";
+                
+                let statusBadge = "";
+                if (submission.status === "approved") {
+                    statusBadge = `<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Approved</span>`;
+                } else if (submission.status === "rejected") {
+                    statusBadge = `<span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Rejected</span>`;
+                } else {
+                    statusBadge = `<span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">Pending</span>`;
+                }
+                
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <h4 class="font-medium">${task.title}</h4>
+                        ${statusBadge}
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-500">
+                        <p>${formatDate(submission.submittedAt)}</p>
+                        <p>+${task.reward || 0} Coins</p>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        });
+    });
+}
+
+// Claim daily reward
+function claimDaily() {
+    const now = Date.now();
+    const dailyButton = document.getElementById('dailyButton');
+    
+    // Disable button to prevent multiple clicks
+    dailyButton.disabled = true;
+    dailyButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Processing...`;
+    
+    db.ref('users/' + currentUser).once('value', snap => {
+        const data = snap.val();
+        const lastClaim = data.lastClaim || 0;
+        const timeSinceLastClaim = now - lastClaim;
+        
+        if (timeSinceLastClaim < 86400000) {
+            const hoursLeft = Math.floor((86400000 - timeSinceLastClaim) / 3600000);
+            showNotification(`Come back in ${hoursLeft} hours to claim your next reward!`);
+            dailyButton.disabled = false;
+            dailyButton.innerHTML = `<i class="fas fa-clock mr-2"></i> Already Claimed Today`;
+            return;
+        }
+        
+        // Update user data
+        const reward = 10; // Daily reward amount
+        db.ref('users/' + currentUser).update({
+            balance: (data.balance || 0) + reward,
+            totalEarned: (data.totalEarned || 0) + reward,
+            lastClaim: now
+        }).then(() => {
+            showNotification(`Daily reward of ${reward} coins claimed!`);
+            dailyButton.innerHTML = `<i class="fas fa-check-circle mr-2"></i> Claimed Today`;
+            
+            // Re-enable button after 24 hours
+            setTimeout(() => {
+                dailyButton.disabled = false;
+                dailyButton.innerHTML = `<i class="fas fa-gift mr-2"></i> Claim Daily Reward (10 Coins)`;
+            }, 86400000);
+        });
+    });
+}
+
+// Show withdraw modal
+function showWithdrawModal() {
+    const minWithdraw = 100;
+    if ((userData.balance || 0) < minWithdraw) {
+        showNotification(`Minimum withdrawal is ${minWithdraw} coins`);
+        return;
+    }
+    
+    document.getElementById('withdrawAmount').value = "";
+    document.getElementById('withdrawUsername').value = currentUser.startsWith('@') ? currentUser : `@${currentUser}`;
+    document.getElementById('withdrawModal').classList.remove('hidden');
+}
+
+// Hide withdraw modal
+function hideWithdrawModal() {
+    document.getElementById('withdrawModal').classList.add('hidden');
+}
+
+// Submit withdraw request
+function submitWithdraw() {
+    const amount = parseInt(document.getElementById('withdrawAmount').value);
+    const username = document.getElementById('withdrawUsername').value.trim();
+    const minWithdraw = 100;
+    
+    if (!amount || amount < minWithdraw) {
+        showNotification(`Minimum withdrawal is ${minWithdraw} coins`);
+        return;
+    }
+    
+    if (amount > (userData.balance || 0)) {
+        showNotification("Insufficient balance");
+        return;
+    }
+    
+    if (!username || !username.startsWith('@')) {
+        showNotification("Please enter a valid Telegram username starting with @");
+        return;
+    }
+    
+    const withdrawId = Date.now();
+    db.ref('withdrawals/' + withdrawId).set({
+        user: currentUser,
+        amount: amount,
+        username: username,
+        status: "pending",
+        requestedAt: Date.now(),
+        tgUserId: tgUserData.id
+    }).then(() => {
+        // Deduct from user balance immediately
+        db.ref('users/' + currentUser).update({
+            balance: (userData.balance || 0) - amount
+        });
+        
+        showNotification(`Withdrawal request submitted for ${amount} coins`);
+        hideWithdrawModal();
+    });
+}
+
+// Show notification
+function showNotification(message) {
+    const banner = document.getElementById('notificationBanner');
+    document.getElementById('notificationText').textContent = message;
+    banner.classList.remove('hidden');
+    
+    // Auto hide after 5 seconds
+    setTimeout(() => {
+        banner.classList.add('hidden');
+    }, 5000);
+}
+
+// Hide notification
+function hideNotification() {
+    document.getElementById('notificationBanner').classList.add('hidden');
+}
+
+// Show task section (main view)
+function showTaskSection() {
+    document.getElementById('appScreen').classList.remove('hidden');
+    document.getElementById('historySection').classList.add('hidden');
+    document.getElementById('profileSection').classList.add('hidden');
+}
+
+// Show history section
+function showHistorySection() {
+    document.getElementById('appScreen').classList.add('hidden');
+    document.getElementById('historySection').classList.remove('hidden');
+    document.getElementById('profileSection').classList.add('hidden');
+    loadTaskHistory();
+}
+
+// Hide history section
+function hideHistorySection() {
+    document.getElementById('historySection').classList.add('hidden');
+    document.getElementById('appScreen').classList.remove('hidden');
+}
+
+// Show profile section
+function showProfileSection() {
+    document.getElementById('appScreen').classList.add('hidden');
+    document.getElementById('profileSection').classList.remove('hidden');
+    document.getElementById('historySection').classList.add('hidden');
+    updateProfileSection();
+}
+
+// Hide profile section
+function hideProfileSection() {
+    document.getElementById('profileSection').classList.add('hidden');
+    document.getElementById('appScreen').classList.remove('hidden');
+}
+
+// Update profile section
+function updateProfileSection() {
+    document.getElementById('profileUsername').textContent = currentUser;
+    document.getElementById('tgUserId').textContent = userData.tgUserId || "N/A";
+    document.getElementById('totalEarned').textContent = `${userData.totalEarned || 0} Coins`;
+    document.getElementById('totalWithdrawn').textContent = `${userData.totalWithdrawn || 0} Coins`;
+    
+    const statusElement = document.getElementById('accountStatus');
+    if (userData.status === "banned") {
+        statusElement.textContent = "Banned";
+        statusElement.className = "font-medium text-red-600";
+    } else {
+        statusElement.textContent = "Active";
+        statusElement.className = "font-medium text-green-600";
+    }
+}
+
+// Format date
+function formatDate(timestamp) {
+    if (!timestamp) return "N/A";
+    const date = new Date(timestamp);
+    return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+}
+
+// Logout user
 function logoutUser() {
-  localStorage.removeItem('loggedUser');
-  location.reload();
+    if (confirm("Are you sure you want to logout?")) {
+        localStorage.removeItem('loggedUser');
+        location.reload();
+    }
 }
 
-const savedUser = localStorage.getItem('loggedUser');
-if (savedUser) {
-  currentUser = savedUser;
-  loadUser();
-} else {
-  autoLoginFromTelegram();
-}
+// Initialize the app when DOM is loaded
+document.addEventListener('DOMContentLoaded', initApp);
 </script>
 </body>
 </html>
