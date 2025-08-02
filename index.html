@@ -168,6 +168,24 @@
             transform: translateY(0);
         }
         
+        /* Ban screen */
+        .ban-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: black;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+            text-align: center;
+        }
+        
         /* Responsive adjustments */
         @media (max-width: 640px) {
             .fixed-section {
@@ -186,6 +204,14 @@
 <div id="loadingScreen" class="h-screen flex flex-col items-center justify-center text-lg font-bold bg-indigo-600 text-white">
     <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mb-4"></div>
     <p>Loading Application...</p>
+</div>
+
+<!-- Ban Screen -->
+<div id="banScreen" class="ban-screen hidden">
+    <i class="fas fa-ban text-6xl text-red-500 mb-4"></i>
+    <h2 class="text-2xl font-bold mb-2">Account Banned</h2>
+    <p class="mb-4">Your account has been suspended due to violation of our terms of service.</p>
+    <p class="text-gray-400">Please contact support if you believe this is a mistake.</p>
 </div>
 
 <!-- Login Modal -->
@@ -904,6 +930,13 @@ function loginUser() {
         if (snapshot.exists()) {
             const user = snapshot.val();
             
+            // Check if account is banned
+            if (user.status === "banned") {
+                showNotification("Your account has been banned. Contact support.");
+                document.getElementById('banScreen').classList.remove('hidden');
+                return;
+            }
+            
             // In a real app, verify password with Firebase Auth
             // For demo, we'll just log them in
             currentUser = username;
@@ -1011,6 +1044,17 @@ function loadUser() {
     // Listen for user data changes
     db.ref('users/' + currentUser).on('value', snapshot => {
         userData = snapshot.val() || {};
+        
+        // Check if user is banned
+        if (userData.status === "banned") {
+            document.getElementById('banScreen').classList.remove('hidden');
+            document.getElementById('appContainer').classList.add('hidden');
+            document.getElementById('historySection').classList.add('hidden');
+            document.getElementById('miningSection').classList.add('hidden');
+            document.getElementById('profileSection').classList.add('hidden');
+            document.getElementById('referralSection').classList.add('hidden');
+            return;
+        }
         
         // Update balance displays
         document.getElementById('balanceDisplay').innerHTML = `
