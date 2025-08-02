@@ -10,30 +10,48 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Smooth transitions */
-        .transition-all {
-            transition-property: all;
-            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-            transition-duration: 300ms;
+        /* Telegram-like animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        /* Fixed layout for Telegram WebApp */
+        body {
+            overflow: hidden;
+            height: 100vh;
         }
         
         /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
+        .scrollable {
+            scrollbar-width: thin;
+            scrollbar-color: #6366f1 #f1f1f1;
         }
-        ::-webkit-scrollbar-track {
+        
+        .scrollable::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .scrollable::-webkit-scrollbar-track {
             background: #f1f1f1;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 3px;
+        
+        .scrollable::-webkit-scrollbar-thumb {
+            background-color: #6366f1;
+            border-radius: 2px;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
+        
+        /* Button press effect */
+        .btn-press:active {
+            transform: scale(0.96);
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 font-sans relative h-screen overflow-hidden">
 
 <!-- Loading Screen -->
 <div id="loadingScreen" class="h-screen flex flex-col items-center justify-center text-lg font-bold bg-indigo-600 text-white">
@@ -41,8 +59,8 @@
     <p>Connecting to Telegram...</p>
 </div>
 
-<!-- Main App -->
-<div id="appScreen" class="hidden flex flex-col h-screen">
+<!-- Main App Container -->
+<div id="appContainer" class="h-full flex flex-col hidden">
     <!-- Header -->
     <div class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md">
         <div>
@@ -54,12 +72,9 @@
                 <i class="fas fa-coins mr-1"></i> Balance: 0 Coins
             </p>
         </div>
-        <div class="flex items-center space-x-3">
-            <button onclick="showWithdrawModal()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg flex items-center transition-all">
+        <div class="flex items-center space-x-2">
+            <button onclick="showWithdrawModal()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg flex items-center transition-all btn-press">
                 <i class="fas fa-wallet mr-1"></i> Withdraw
-            </button>
-            <button onclick="logoutUser()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg flex items-center transition-all">
-                <i class="fas fa-sign-out-alt mr-1"></i> Logout
             </button>
         </div>
     </div>
@@ -74,10 +89,10 @@
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="flex-1 overflow-y-auto">
+    <!-- Main Content - Fixed Height with Scroll -->
+    <div id="mainContent" class="flex-1 overflow-y-auto scrollable">
         <!-- Balance Card -->
-        <div class="bg-white mx-4 mt-4 p-4 rounded-lg shadow-md transition-all hover:shadow-lg">
+        <div class="bg-white mx-4 mt-4 p-4 rounded-lg shadow-md transition-all hover:shadow-lg animate-fadeIn">
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="text-gray-500 text-sm">Total Balance</h3>
@@ -91,46 +106,53 @@
         </div>
 
         <!-- Referral Section -->
-        <div class="mx-4 mt-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 rounded-lg shadow-md">
+        <div class="mx-4 mt-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 rounded-lg shadow-md animate-fadeIn">
             <h3 class="font-bold mb-2 flex items-center">
                 <i class="fas fa-user-plus mr-2"></i> Refer & Earn
             </h3>
             <p class="text-sm mb-3">Invite friends and earn 5% of their earnings!</p>
             <div class="flex items-center bg-black bg-opacity-20 p-2 rounded">
                 <input type="text" id="referralLink" class="flex-1 bg-transparent border-none text-white" value="https://t.me/earnTo3_bot" readonly>
-                <button onclick="copyReferralLink()" class="ml-2 bg-white text-emerald-600 px-3 py-1 rounded text-sm font-bold transition-all hover:bg-gray-100">
+                <button onclick="copyReferralLink()" class="ml-2 bg-white text-emerald-600 px-3 py-1 rounded text-sm font-bold transition-all hover:bg-gray-100 btn-press">
                     <i class="fas fa-copy mr-1"></i> Copy
                 </button>
             </div>
         </div>
 
         <!-- Daily Reward Section -->
-        <div class="mx-4 mt-4">
-            <button onclick="claimDaily()" id="dailyButton" class="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all active:scale-95">
+        <div class="mx-4 mt-4 animate-fadeIn">
+            <button onclick="claimDaily()" id="dailyButton" class="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all btn-press">
                 <i class="fas fa-gift mr-2"></i> Claim Daily Reward (10 Coins)
             </button>
         </div>
 
         <!-- Task List -->
-        <div class="mx-4 mt-6">
-            <h3 class="font-bold text-xl mb-3 flex items-center">
+        <div class="mx-4 mt-6 mb-16">
+            <h3 class="font-bold text-xl mb-3 flex items-center animate-fadeIn">
                 <i class="fas fa-tasks mr-2 text-indigo-600"></i> Available Tasks
             </h3>
             <div id="tasksContainer" class="space-y-3"></div>
+            
+            <!-- Empty State -->
+            <div id="emptyTasks" class="text-center py-8 text-gray-500 hidden">
+                <i class="fas fa-tasks text-4xl mb-3 opacity-30"></i>
+                <p>No tasks available at the moment</p>
+                <p class="text-sm mt-2">Check back later for new tasks</p>
+            </div>
         </div>
     </div>
 
-    <!-- Bottom Nav -->
-    <div class="bg-white border-t border-gray-200 p-3 flex justify-around">
-        <button onclick="showTaskSection()" class="flex flex-col items-center text-indigo-600 transition-all hover:scale-105">
+    <!-- Fixed Bottom Nav -->
+    <div class="bg-white border-t border-gray-200 p-3 flex justify-around fixed bottom-0 left-0 right-0">
+        <button onclick="showTaskSection()" id="navTasks" class="flex flex-col items-center text-indigo-600 transition-all hover:scale-105 btn-press">
             <i class="fas fa-tasks text-xl"></i>
             <span class="text-xs mt-1">Tasks</span>
         </button>
-        <button onclick="showHistorySection()" class="flex flex-col items-center text-gray-500 transition-all hover:scale-105">
+        <button onclick="showHistorySection()" id="navHistory" class="flex flex-col items-center text-gray-500 transition-all hover:scale-105 btn-press">
             <i class="fas fa-history text-xl"></i>
             <span class="text-xs mt-1">History</span>
         </button>
-        <button onclick="showProfileSection()" class="flex flex-col items-center text-gray-500 transition-all hover:scale-105">
+        <button onclick="showProfileSection()" id="navProfile" class="flex flex-col items-center text-gray-500 transition-all hover:scale-105 btn-press">
             <i class="fas fa-user text-xl"></i>
             <span class="text-xs mt-1">Profile</span>
         </button>
@@ -138,11 +160,11 @@
 </div>
 
 <!-- Withdraw Modal -->
-<div id="withdrawModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-lg p-6 w-11/12 max-w-md animate-fadeIn">
+<div id="withdrawModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md animate-fadeIn">
         <div class="flex justify-between items-center mb-4">
             <h3 class="font-bold text-xl">Withdraw Coins</h3>
-            <button onclick="hideWithdrawModal()" class="text-gray-500 hover:text-gray-700 transition-all">
+            <button onclick="hideWithdrawModal()" class="text-gray-500 hover:text-gray-700 transition-all btn-press">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -151,49 +173,68 @@
             <input type="number" id="withdrawAmount" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter amount">
         </div>
         <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Telegram Username</label>
-            <input type="text" id="withdrawUsername" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="@username">
+            <label class="block text-gray-700 mb-2">Withdrawal Method</label>
+            <select id="withdrawMethod" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                <option value="nagad">Nagad</option>
+                <option value="bkash">bKash</option>
+                <option value="rocket">Rocket</option>
+                <option value="binance">Binance</option>
+                <option value="bitget">Bitget</option>
+            </select>
         </div>
-        <button onclick="submitWithdraw()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold transition-all active:scale-95">
+        <div id="accountNumberField" class="mb-4">
+            <label class="block text-gray-700 mb-2">Account Number</label>
+            <input type="text" id="withdrawAccount" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter account number">
+        </div>
+        <button onclick="submitWithdraw()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold transition-all btn-press">
             Submit Withdraw Request
         </button>
     </div>
 </div>
 
-<!-- Task History Section (Hidden by default) -->
-<div id="historySection" class="hidden flex flex-col h-screen">
+<!-- History Section (Hidden by default) -->
+<div id="historySection" class="h-full flex flex-col hidden">
     <div class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md">
-        <button onclick="hideHistorySection()" class="flex items-center transition-all hover:scale-105">
+        <button onclick="showTaskSection()" class="flex items-center transition-all hover:scale-105 btn-press">
             <i class="fas fa-arrow-left mr-2"></i> Back
         </button>
         <h2 class="font-bold text-lg">Task History</h2>
         <div class="w-6"></div> <!-- Spacer for alignment -->
     </div>
-    <div class="flex-1 overflow-y-auto p-4">
+    
+    <div class="flex-1 overflow-y-auto scrollable p-4">
         <div id="historyContainer" class="space-y-3">
             <!-- History items will be loaded here -->
+        </div>
+        
+        <!-- Empty State -->
+        <div id="emptyHistory" class="text-center py-8 text-gray-500 hidden">
+            <i class="fas fa-history text-4xl mb-3 opacity-30"></i>
+            <p>No task history yet</p>
+            <p class="text-sm mt-2">Complete tasks to see them here</p>
         </div>
     </div>
 </div>
 
 <!-- Profile Section (Hidden by default) -->
-<div id="profileSection" class="hidden flex flex-col h-screen">
+<div id="profileSection" class="h-full flex flex-col hidden">
     <div class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md">
-        <button onclick="hideProfileSection()" class="flex items-center transition-all hover:scale-105">
+        <button onclick="showTaskSection()" class="flex items-center transition-all hover:scale-105 btn-press">
             <i class="fas fa-arrow-left mr-2"></i> Back
         </button>
         <h2 class="font-bold text-lg">My Profile</h2>
         <div class="w-6"></div> <!-- Spacer for alignment -->
     </div>
-    <div class="flex-1 overflow-y-auto p-4">
-        <div class="bg-white rounded-lg shadow-md p-4 mb-4 transition-all hover:shadow-lg">
+    
+    <div class="flex-1 overflow-y-auto scrollable p-4">
+        <div class="bg-white rounded-lg shadow-md p-4 mb-4 transition-all hover:shadow-lg animate-fadeIn">
             <div class="flex items-center space-x-4 mb-4">
                 <div class="bg-indigo-100 p-3 rounded-full transition-all hover:bg-indigo-200">
                     <i class="fas fa-user text-indigo-600 text-2xl"></i>
                 </div>
                 <div>
                     <h3 id="profileUsername" class="font-bold text-lg">@username</h3>
-                    <p class="text-gray-600 text-sm">Joined 2 days ago</p>
+                    <p id="joinDate" class="text-gray-600 text-sm">Joined 2 days ago</p>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
@@ -216,7 +257,7 @@
             </div>
         </div>
         
-        <div class="bg-white rounded-lg shadow-md p-4 transition-all hover:shadow-lg">
+        <div class="bg-white rounded-lg shadow-md p-4 transition-all hover:shadow-lg animate-fadeIn">
             <h3 class="font-bold mb-3">Account Information</h3>
             <div class="space-y-3">
                 <div>
@@ -229,9 +270,17 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Logout Button -->
+        <div class="mt-6 mb-16">
+            <button onclick="logoutUser()" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-bold transition-all btn-press">
+                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+            </button>
+        </div>
     </div>
 </div>
 
+<!-- Firebase configuration -->
 <script>
 // Firebase configuration
 const firebaseConfig = {
@@ -272,6 +321,20 @@ function initApp() {
         const notification = snapshot.val();
         showNotification(notification.message);
     });
+    
+    // Handle withdraw method change
+    document.getElementById('withdrawMethod').addEventListener('change', function() {
+        const method = this.value;
+        const accountField = document.getElementById('accountNumberField');
+        
+        if (method === 'binance' || method === 'bitget') {
+            accountField.querySelector('label').textContent = 'Wallet Address';
+            accountField.querySelector('input').placeholder = 'Enter wallet address';
+        } else {
+            accountField.querySelector('label').textContent = 'Account Number';
+            accountField.querySelector('input').placeholder = 'Enter account number';
+        }
+    });
 }
 
 // Auto login from Telegram
@@ -282,7 +345,7 @@ function autoLoginFromTelegram() {
             <div class="text-center p-4">
                 <i class="fas fa-exclamation-triangle text-3xl text-yellow-400 mb-3"></i>
                 <p class="text-lg">Please open this app from the Telegram bot</p>
-                <button onclick="location.reload()" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg transition-all hover:bg-indigo-700 active:scale-95">
+                <button onclick="location.reload()" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg transition-all hover:bg-indigo-700 btn-press">
                     <i class="fas fa-sync-alt mr-2"></i> Try Again
                 </button>
             </div>
@@ -363,7 +426,8 @@ function autoLoginFromTelegram() {
 // Load user data
 function loadUser() {
     document.getElementById('loadingScreen').classList.add('hidden');
-    document.getElementById('appScreen').classList.remove('hidden');
+    document.getElementById('appContainer').classList.remove('hidden');
+    showTaskSection();
     
     // Update UI with user data
     document.getElementById('displayName').textContent = tgUserData.first_name || currentUser;
@@ -396,30 +460,28 @@ function loadTasks() {
     db.ref('tasks').orderByChild('active').equalTo(true).once('value', snap => {
         const tasks = snap.val() || {};
         const container = document.getElementById('tasksContainer');
+        const emptyState = document.getElementById('emptyTasks');
+        
         container.innerHTML = "";
         
         if (Object.keys(tasks).length === 0) {
-            container.innerHTML = `
-                <div class="text-center py-8 text-gray-500">
-                    <i class="fas fa-tasks text-4xl mb-3 opacity-30"></i>
-                    <p>No tasks available at the moment</p>
-                    <p class="text-sm mt-2">Check back later for new tasks</p>
-                </div>
-            `;
+            emptyState.classList.remove('hidden');
             return;
         }
+        
+        emptyState.classList.add('hidden');
         
         Object.keys(tasks).forEach(taskId => {
             const task = tasks[taskId];
             const div = document.createElement('div');
-            div.className = "bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-all";
+            div.className = "bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-all animate-fadeIn";
             div.innerHTML = `
                 <div class="flex justify-between items-start mb-2">
                     <h4 class="font-bold text-lg">${task.title}</h4>
                     <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">+${task.reward} Coins</span>
                 </div>
                 <p class="text-gray-600 text-sm mb-3">${task.description || 'Complete this task to earn coins'}</p>
-                <button onclick="submitTask('${taskId}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium transition-all active:scale-95">
+                <button onclick="submitTask('${taskId}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium transition-all btn-press">
                     <i class="fas fa-check-circle mr-2"></i> Complete Task
                 </button>
             `;
@@ -466,18 +528,16 @@ function loadTaskHistory() {
     db.ref('submissions').orderByChild('user').equalTo(currentUser).limitToLast(20).once('value', snap => {
         const submissions = snap.val() || {};
         const container = document.getElementById('historyContainer');
+        const emptyState = document.getElementById('emptyHistory');
+        
         container.innerHTML = "";
         
         if (Object.keys(submissions).length === 0) {
-            container.innerHTML = `
-                <div class="text-center py-8 text-gray-500">
-                    <i class="fas fa-history text-4xl mb-3 opacity-30"></i>
-                    <p>No task history yet</p>
-                    <p class="text-sm mt-2">Complete tasks to see them here</p>
-                </div>
-            `;
+            emptyState.classList.remove('hidden');
             return;
         }
+        
+        emptyState.classList.add('hidden');
         
         // Get task names first
         db.ref('tasks').once('value', taskSnap => {
@@ -485,10 +545,10 @@ function loadTaskHistory() {
             
             Object.keys(submissions).reverse().forEach(subId => {
                 const submission = submissions[subId];
-                const task = allTasks[submission.taskId] || { title: "Unknown Task" };
+                const task = allTasks[submission.taskId] || { title: "Unknown Task", reward: 0 };
                 
                 const div = document.createElement('div');
-                div.className = "bg-white p-4 rounded-lg shadow-sm transition-all hover:shadow-md";
+                div.className = "bg-white p-4 rounded-lg shadow-sm transition-all hover:shadow-md animate-fadeIn";
                 
                 let statusBadge = "";
                 if (submission.status === "approved") {
@@ -581,7 +641,7 @@ function showWithdrawModal() {
     }
     
     document.getElementById('withdrawAmount').value = "";
-    document.getElementById('withdrawUsername').value = currentUser.startsWith('@') ? currentUser : `@${currentUser}`;
+    document.getElementById('withdrawAccount').value = "";
     document.getElementById('withdrawModal').classList.remove('hidden');
 }
 
@@ -593,7 +653,8 @@ function hideWithdrawModal() {
 // Submit withdraw request
 function submitWithdraw() {
     const amount = parseInt(document.getElementById('withdrawAmount').value);
-    const username = document.getElementById('withdrawUsername').value.trim();
+    const method = document.getElementById('withdrawMethod').value;
+    const account = document.getElementById('withdrawAccount').value.trim();
     const minWithdraw = 100;
     
     if (!amount || amount < minWithdraw) {
@@ -606,8 +667,9 @@ function submitWithdraw() {
         return;
     }
     
-    if (!username || !username.startsWith('@')) {
-        showNotification("Please enter a valid Telegram username starting with @");
+    if (!account) {
+        const fieldName = (method === 'binance' || method === 'bitget') ? 'wallet address' : 'account number';
+        showNotification(`Please enter a valid ${fieldName}`);
         return;
     }
     
@@ -615,7 +677,8 @@ function submitWithdraw() {
     db.ref('withdrawals/' + withdrawId).set({
         user: currentUser,
         amount: amount,
-        username: username,
+        method: method,
+        account: account,
         status: "pending",
         requestedAt: Date.now(),
         tgUserId: tgUserData.id
@@ -628,7 +691,36 @@ function submitWithdraw() {
         
         showNotification(`Withdrawal request submitted for ${amount} coins (${amount/10} Taka)`);
         hideWithdrawModal();
+        
+        // Open payment method URL if available
+        openPaymentMethod(method);
     });
+}
+
+// Open payment method URL
+function openPaymentMethod(method) {
+    let url = '';
+    switch(method) {
+        case 'nagad':
+            url = 'https://nagad.com.bd';
+            break;
+        case 'bkash':
+            url = 'https://www.bkash.com';
+            break;
+        case 'rocket':
+            url = 'https://www.dutchbanglabank.com/rocket/rocket.html';
+            break;
+        case 'binance':
+            url = 'https://www.binance.com';
+            break;
+        case 'bitget':
+            url = 'https://www.bitget.com';
+            break;
+    }
+    
+    if (url) {
+        window.open(url, '_blank');
+    }
 }
 
 // Copy referral link
@@ -659,37 +751,49 @@ function hideNotification() {
 
 // Show task section (main view)
 function showTaskSection() {
-    document.getElementById('appScreen').classList.remove('hidden');
+    document.getElementById('appContainer').classList.remove('hidden');
     document.getElementById('historySection').classList.add('hidden');
     document.getElementById('profileSection').classList.add('hidden');
+    
+    // Update nav active state
+    document.getElementById('navTasks').classList.remove('text-gray-500');
+    document.getElementById('navTasks').classList.add('text-indigo-600');
+    document.getElementById('navHistory').classList.remove('text-indigo-600');
+    document.getElementById('navHistory').classList.add('text-gray-500');
+    document.getElementById('navProfile').classList.remove('text-indigo-600');
+    document.getElementById('navProfile').classList.add('text-gray-500');
 }
 
 // Show history section
 function showHistorySection() {
-    document.getElementById('appScreen').classList.add('hidden');
+    document.getElementById('appContainer').classList.add('hidden');
     document.getElementById('historySection').classList.remove('hidden');
     document.getElementById('profileSection').classList.add('hidden');
     loadTaskHistory();
-}
-
-// Hide history section
-function hideHistorySection() {
-    document.getElementById('historySection').classList.add('hidden');
-    document.getElementById('appScreen').classList.remove('hidden');
+    
+    // Update nav active state
+    document.getElementById('navTasks').classList.remove('text-indigo-600');
+    document.getElementById('navTasks').classList.add('text-gray-500');
+    document.getElementById('navHistory').classList.remove('text-gray-500');
+    document.getElementById('navHistory').classList.add('text-indigo-600');
+    document.getElementById('navProfile').classList.remove('text-indigo-600');
+    document.getElementById('navProfile').classList.add('text-gray-500');
 }
 
 // Show profile section
 function showProfileSection() {
-    document.getElementById('appScreen').classList.add('hidden');
+    document.getElementById('appContainer').classList.add('hidden');
     document.getElementById('profileSection').classList.remove('hidden');
     document.getElementById('historySection').classList.add('hidden');
     updateProfileSection();
-}
-
-// Hide profile section
-function hideProfileSection() {
-    document.getElementById('profileSection').classList.add('hidden');
-    document.getElementById('appScreen').classList.remove('hidden');
+    
+    // Update nav active state
+    document.getElementById('navTasks').classList.remove('text-indigo-600');
+    document.getElementById('navTasks').classList.add('text-gray-500');
+    document.getElementById('navHistory').classList.remove('text-indigo-600');
+    document.getElementById('navHistory').classList.add('text-gray-500');
+    document.getElementById('navProfile').classList.remove('text-gray-500');
+    document.getElementById('navProfile').classList.add('text-indigo-600');
 }
 
 // Update profile section
@@ -699,6 +803,12 @@ function updateProfileSection() {
     document.getElementById('totalWithdrawn').textContent = `${userData.totalWithdrawn || 0} Coins`;
     document.getElementById('referralEarnings').textContent = `${userData.referralEarnings || 0} Coins`;
     document.getElementById('referralCount').textContent = `${userData.referralCount || 0}`;
+    
+    // Format join date
+    if (userData.joinedAt) {
+        const joinDate = new Date(userData.joinedAt);
+        document.getElementById('joinDate').textContent = `Joined ${formatRelativeDate(joinDate)}`;
+    }
     
     const statusElement = document.getElementById('accountStatus');
     if (userData.status === "banned") {
@@ -714,7 +824,21 @@ function updateProfileSection() {
 function formatDate(timestamp) {
     if (!timestamp) return "N/A";
     const date = new Date(timestamp);
-    return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+    return date.toLocaleDateString() + " " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
+
+// Format relative date (e.g., "2 days ago")
+function formatRelativeDate(date) {
+    const now = new Date();
+    const diff = now - date;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    if (days === 0) return "today";
+    if (days === 1) return "yesterday";
+    if (days < 7) return `${days} days ago`;
+    if (days < 30) return `${Math.floor(days/7)} weeks ago`;
+    if (days < 365) return `${Math.floor(days/30)} months ago`;
+    return `${Math.floor(days/365)} years ago`;
 }
 
 // Logout user
