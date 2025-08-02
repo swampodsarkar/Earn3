@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaskEarn - Complete Task & Auto Mining</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Telegram-like animations */
+        /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -20,7 +19,7 @@
             animation: fadeIn 0.3s ease-out forwards;
         }
         
-        /* Fixed layout for Telegram WebApp */
+        /* Layout */
         body {
             overflow: hidden;
             height: 100vh;
@@ -67,13 +66,13 @@
             transform: translateX(0);
         }
         
-        /* Telegram-like header */
+        /* Header */
         .tg-header {
             background-color: #0088cc;
             color: white;
         }
         
-        /* Telegram-like buttons */
+        /* Buttons */
         .tg-button {
             background-color: #0088cc;
             color: white;
@@ -86,7 +85,7 @@
             background-color: #0077b3;
         }
         
-        /* Telegram-like cards */
+        /* Cards */
         .tg-card {
             background-color: white;
             border-radius: 12px;
@@ -131,6 +130,44 @@
             transition: width 0.3s ease;
         }
         
+        /* Modal styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+        
+        .modal.open .modal-content {
+            transform: translateY(0);
+        }
+        
         /* Responsive adjustments */
         @media (max-width: 640px) {
             .fixed-section {
@@ -148,7 +185,67 @@
 <!-- Loading Screen -->
 <div id="loadingScreen" class="h-screen flex flex-col items-center justify-center text-lg font-bold bg-indigo-600 text-white">
     <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mb-4"></div>
-    <p>Connecting to Telegram...</p>
+    <p>Loading Application...</p>
+</div>
+
+<!-- Login Modal -->
+<div id="loginModal" class="modal">
+    <div class="modal-content animate-fadeIn">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-xl">Login to TaskEarn</h3>
+            <button onclick="hideLoginModal()" class="text-gray-500 hover:text-gray-700 transition-all btn-press">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Username</label>
+            <input type="text" id="loginUsername" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter your username">
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Password</label>
+            <input type="password" id="loginPassword" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter your password">
+        </div>
+        <button onclick="loginUser()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold transition-all btn-press">
+            <i class="fas fa-sign-in-alt mr-2"></i> Login
+        </button>
+        <div class="mt-4 text-center">
+            <p class="text-sm text-gray-600">Don't have an account? <button onclick="showRegisterModal()" class="text-indigo-600 font-medium">Register</button></p>
+        </div>
+    </div>
+</div>
+
+<!-- Register Modal -->
+<div id="registerModal" class="modal">
+    <div class="modal-content animate-fadeIn">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-xl">Create Account</h3>
+            <button onclick="hideRegisterModal()" class="text-gray-500 hover:text-gray-700 transition-all btn-press">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Username</label>
+            <input type="text" id="registerUsername" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Choose a username">
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Password</label>
+            <input type="password" id="registerPassword" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Create a password">
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Confirm Password</label>
+            <input type="password" id="registerConfirmPassword" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Confirm your password">
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Referral Code (Optional)</label>
+            <input type="text" id="referralCode" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter referral code if any">
+        </div>
+        <button onclick="registerUser()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold transition-all btn-press">
+            <i class="fas fa-user-plus mr-2"></i> Register
+        </button>
+        <div class="mt-4 text-center">
+            <p class="text-sm text-gray-600">Already have an account? <button onclick="showLoginModal()" class="text-indigo-600 font-medium">Login</button></p>
+        </div>
+    </div>
 </div>
 
 <!-- Main App Container -->
@@ -549,7 +646,7 @@
             <div class="mb-4">
                 <label class="block text-gray-700 mb-2">Your Referral Link</label>
                 <div class="flex items-center bg-gray-100 p-2 rounded">
-                    <input type="text" id="referralLink" class="flex-1 bg-transparent border-none text-gray-800" value="https://t.me/earnTo3_bot" readonly>
+                    <input type="text" id="referralLink" class="flex-1 bg-transparent border-none text-gray-800" value="https://example.com/earn?ref=username" readonly>
                     <button onclick="copyReferralLink()" class="ml-2 bg-indigo-600 text-white px-3 py-1 rounded text-sm font-bold transition-all hover:bg-indigo-700 btn-press">
                         <i class="fas fa-copy mr-1"></i> Copy
                     </button>
@@ -607,8 +704,8 @@
 </div>
 
 <!-- Withdraw Modal -->
-<div id="withdrawModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md animate-fadeIn">
+<div id="withdrawModal" class="modal">
+    <div class="modal-content animate-fadeIn">
         <div class="flex justify-between items-center mb-4">
             <h3 class="font-bold text-xl">Withdraw Coins</h3>
             <button onclick="hideWithdrawModal()" class="text-gray-500 hover:text-gray-700 transition-all btn-press">
@@ -640,8 +737,8 @@
 </div>
 
 <!-- Deposit Modal -->
-<div id="depositModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md animate-fadeIn">
+<div id="depositModal" class="modal">
+    <div class="modal-content animate-fadeIn">
         <div class="flex justify-between items-center mb-4">
             <h3 class="font-bold text-xl">Deposit Coins</h3>
             <button onclick="hideDepositModal()" class="text-gray-500 hover:text-gray-700 transition-all btn-press">
@@ -692,8 +789,8 @@
 </div>
 
 <!-- QR Code Modal -->
-<div id="qrModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md animate-fadeIn">
+<div id="qrModal" class="modal">
+    <div class="modal-content animate-fadeIn">
         <div class="flex justify-between items-center mb-4">
             <h3 class="font-bold text-xl">Scan QR Code to Pay</h3>
             <button onclick="hideQrModal()" class="text-gray-500 hover:text-gray-700 transition-all btn-press">
@@ -701,7 +798,7 @@
             </button>
         </div>
         <div class="text-center mb-4">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://t.me/earnTo3_bot" alt="QR Code" class="mx-auto mb-3">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://example.com/pay" alt="QR Code" class="mx-auto mb-3">
             <p class="text-sm text-gray-600">Scan this QR code with your mobile payment app</p>
         </div>
         <div class="bg-gray-100 p-3 rounded-lg mb-4">
@@ -732,13 +829,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Telegram WebApp initialization
-const tg = window.Telegram.WebApp;
-tg.expand();
-
 let currentUser = null;
 let userData = {};
-let tgUserData = {};
 let miningInterval = null;
 let miningSessionStart = 0;
 let miningProgress = 0;
@@ -746,12 +838,16 @@ let miningSessionSeconds = 0;
 
 // Initialize the app
 function initApp() {
+    // Check if user is logged in
     const savedUser = localStorage.getItem('loggedUser');
     if (savedUser) {
         currentUser = savedUser;
         loadUser();
     } else {
-        autoLoginFromTelegram();
+        // Show login modal if not logged in
+        setTimeout(() => {
+            showLoginModal();
+        }, 500);
     }
     
     // Listen for global notifications
@@ -771,93 +867,105 @@ function initApp() {
     });
 }
 
-// Update withdraw method fields based on selection
-function updateWithdrawMethodFields(method) {
-    const accountField = document.getElementById('accountNumberField');
-    
-    if (method === 'binance' || method === 'bitget') {
-        accountField.querySelector('label').textContent = 'Wallet Address';
-        accountField.querySelector('input').placeholder = 'Enter wallet address';
-    } else {
-        accountField.querySelector('label').textContent = 'Account Number';
-        accountField.querySelector('input').placeholder = 'Enter account number';
-    }
+// Show login modal
+function showLoginModal() {
+    document.getElementById('loginModal').classList.add('open');
 }
 
-// Update QR code based on payment method
-function updateQrCode(method) {
-    const qrMethodElement = document.getElementById('qrPaymentMethod');
-    let number = '';
-    
-    switch(method) {
-        case 'nagad':
-            number = '017XXXXXXXX';
-            qrMethodElement.textContent = 'Nagad';
-            break;
-        case 'bkash':
-            number = '017XXXXXXXX';
-            qrMethodElement.textContent = 'bKash';
-            break;
-        case 'rocket':
-            number = '017XXXXXXXX';
-            qrMethodElement.textContent = 'Rocket';
-            break;
-    }
-    
-    // In a real app, you would update the QR code image src here
-    // document.querySelector('#qrModal img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${number}`;
+// Hide login modal
+function hideLoginModal() {
+    document.getElementById('loginModal').classList.remove('open');
 }
 
-// Auto login from Telegram
-function autoLoginFromTelegram() {
-    const tgUser = tg.initDataUnsafe?.user;
-    if (!tgUser) {
-        document.getElementById('loadingScreen').innerHTML = `
-            <div class="text-center p-4">
-                <i class="fas fa-exclamation-triangle text-3xl text-yellow-400 mb-3"></i>
-                <p class="text-lg">Please open this app from the Telegram bot</p>
-                <button onclick="location.reload()" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg transition-all hover:bg-indigo-700 btn-press">
-                    <i class="fas fa-sync-alt mr-2"></i> Try Again
-                </button>
-            </div>
-        `;
+// Show register modal
+function showRegisterModal() {
+    hideLoginModal();
+    document.getElementById('registerModal').classList.add('open');
+}
+
+// Hide register modal
+function hideRegisterModal() {
+    document.getElementById('registerModal').classList.remove('open');
+}
+
+// Login user
+function loginUser() {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!username || !password) {
+        showNotification("Please enter both username and password");
         return;
     }
     
-    tgUserData = {
-        id: tgUser.id,
-        username: tgUser.username || ("tguser_" + tgUser.id),
-        first_name: tgUser.first_name,
-        last_name: tgUser.last_name
-    };
+    // In a real app, you would verify credentials with Firebase Auth
+    // For demo, we'll just check if the user exists in the database
+    db.ref('users/' + username).once('value').then(snapshot => {
+        if (snapshot.exists()) {
+            const user = snapshot.val();
+            
+            // In a real app, verify password with Firebase Auth
+            // For demo, we'll just log them in
+            currentUser = username;
+            localStorage.setItem('loggedUser', currentUser);
+            hideLoginModal();
+            loadUser();
+            showNotification("Login successful!");
+        } else {
+            showNotification("User not found. Please register.");
+        }
+    });
+}
+
+// Register new user
+function registerUser() {
+    const username = document.getElementById('registerUsername').value.trim();
+    const password = document.getElementById('registerPassword').value;
+    const confirmPassword = document.getElementById('registerConfirmPassword').value;
+    const referralCode = document.getElementById('referralCode').value.trim();
     
-    // Check if this is a referral signup
-    const initData = new URLSearchParams(tg.initData);
-    const startParam = initData.get('startapp');
-    let referrer = null;
-    
-    if (startParam && startParam.startsWith('ref_')) {
-        referrer = startParam.substring(4);
+    if (!username || !password || !confirmPassword) {
+        showNotification("Please fill all required fields");
+        return;
     }
     
-    const userRef = db.ref('users/' + tgUserData.username);
+    if (password !== confirmPassword) {
+        showNotification("Passwords do not match");
+        return;
+    }
     
-    userRef.once('value', snapshot => {
-        if (!snapshot.exists()) {
-            // New user - check if referred
+    if (username.length < 4) {
+        showNotification("Username must be at least 4 characters");
+        return;
+    }
+    
+    if (password.length < 6) {
+        showNotification("Password must be at least 6 characters");
+        return;
+    }
+    
+    // Check if username already exists
+    db.ref('users/' + username).once('value').then(snapshot => {
+        if (snapshot.exists()) {
+            showNotification("Username already taken");
+        } else {
+            // Check referral code if provided
+            let referredBy = null;
+            if (referralCode) {
+                referredBy = referralCode;
+            }
+            
+            // Create new user
             const userData = { 
-                balance: 0,
-                totalEarned: 0,
+                balance: 10, // Starting bonus
+                totalEarned: 10,
                 totalWithdrawn: 0,
                 referralEarnings: 0,
                 referralCount: 0,
-                referredBy: referrer,
+                referredBy: referredBy,
                 lastClaim: 0,
                 status: "active",
                 joinedAt: Date.now(),
-                tgUserId: tgUser.id,
-                firstName: tgUser.first_name,
-                lastName: tgUser.last_name,
                 miningDeposit: 0,
                 miningActive: false,
                 miningEarnings: 0,
@@ -865,37 +973,26 @@ function autoLoginFromTelegram() {
                 miningLastUpdate: 0
             };
             
-            userRef.set(userData);
-            
-            // If referred, update referrer's data
-            if (referrer) {
-                db.ref('users/' + referrer).once('value', referrerSnap => {
-                    if (referrerSnap.exists()) {
-                        const referrerData = referrerSnap.val();
-                        db.ref('users/' + referrer).update({
-                            referralCount: (referrerData.referralCount || 0) + 1
-                        });
-                    }
-                });
-            }
-        } else {
-            // Existing user - check if banned
-            const userData = snapshot.val();
-            if (userData.status === "banned") {
-                document.getElementById('loadingScreen').innerHTML = `
-                    <div class="text-center p-4">
-                        <i class="fas fa-ban text-3xl text-red-500 mb-3"></i>
-                        <p class="text-lg">Your account has been banned</p>
-                        <p class="text-sm text-gray-300 mt-2">Contact support for more information</p>
-                    </div>
-                `;
-                return;
-            }
+            db.ref('users/' + username).set(userData).then(() => {
+                // If referred, update referrer's data
+                if (referredBy) {
+                    db.ref('users/' + referredBy).once('value', referrerSnap => {
+                        if (referrerSnap.exists()) {
+                            const referrerData = referrerSnap.val();
+                            db.ref('users/' + referredBy).update({
+                                referralCount: (referrerData.referralCount || 0) + 1
+                            });
+                        }
+                    });
+                }
+                
+                currentUser = username;
+                localStorage.setItem('loggedUser', currentUser);
+                hideRegisterModal();
+                loadUser();
+                showNotification("Registration successful! You received 10 bonus coins.");
+            });
         }
-        
-        currentUser = tgUserData.username;
-        localStorage.setItem('loggedUser', currentUser);
-        loadUser();
     });
 }
 
@@ -906,10 +1003,10 @@ function loadUser() {
     showTaskSection();
     
     // Update UI with user data
-    document.getElementById('sidebarUsername').textContent = tgUserData.first_name || currentUser;
+    document.getElementById('sidebarUsername').textContent = currentUser;
     
     // Set referral link
-    document.getElementById('referralLink').value = `https://t.me/earnTo3_bot?start=ref_${currentUser}`;
+    document.getElementById('referralLink').value = `https://example.com/earn?ref=${currentUser}`;
     
     // Listen for user data changes
     db.ref('users/' + currentUser).on('value', snapshot => {
@@ -961,6 +1058,84 @@ function loadUser() {
     
     // Auto approve pending tasks after 10 minutes
     checkPendingTasks();
+}
+
+// Update withdraw method fields based on selection
+function updateWithdrawMethodFields(method) {
+    const accountField = document.getElementById('accountNumberField');
+    
+    if (method === 'binance' || method === 'bitget') {
+        accountField.querySelector('label').textContent = 'Wallet Address';
+        accountField.querySelector('input').placeholder = 'Enter wallet address';
+    } else {
+        accountField.querySelector('label').textContent = 'Account Number';
+        accountField.querySelector('input').placeholder = 'Enter account number';
+    }
+}
+
+// Update QR code based on payment method
+function updateQrCode(method) {
+    const qrMethodElement = document.getElementById('qrPaymentMethod');
+    let number = '';
+    
+    switch(method) {
+        case 'nagad':
+            number = '017XXXXXXXX';
+            qrMethodElement.textContent = 'Nagad';
+            break;
+        case 'bkash':
+            number = '017XXXXXXXX';
+            qrMethodElement.textContent = 'bKash';
+            break;
+        case 'rocket':
+            number = '017XXXXXXXX';
+            qrMethodElement.textContent = 'Rocket';
+            break;
+    }
+    
+    // Update the QR code image src
+    document.querySelector('#qrModal img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${number}`;
+}
+
+// Show deposit modal
+function showDepositModal() {
+    document.getElementById('depositAmount').value = "";
+    document.getElementById('transactionId').value = "";
+    document.getElementById('senderAccount').value = "";
+    document.getElementById('depositModal').classList.add('open');
+}
+
+// Hide deposit modal
+function hideDepositModal() {
+    document.getElementById('depositModal').classList.remove('open');
+}
+
+// Show QR code modal
+function showQrModal() {
+    document.getElementById('qrModal').classList.add('open');
+}
+
+// Hide QR code modal
+function hideQrModal() {
+    document.getElementById('qrModal').classList.remove('open');
+}
+
+// Show withdraw modal
+function showWithdrawModal() {
+    const minWithdraw = 100;
+    if ((userData.balance || 0) < minWithdraw) {
+        showNotification(`Minimum withdrawal is ${minWithdraw} coins (10 Taka)`);
+        return;
+    }
+    
+    document.getElementById('withdrawAmount').value = "";
+    document.getElementById('withdrawAccount').value = "";
+    document.getElementById('withdrawModal').classList.add('open');
+}
+
+// Hide withdraw modal
+function hideWithdrawModal() {
+    document.getElementById('withdrawModal').classList.remove('open');
 }
 
 // Update mining UI based on user data
@@ -1242,7 +1417,6 @@ function submitTask(taskId) {
         taskId: taskId,
         status: "pending",
         submittedAt: Date.now(),
-        tgUserId: tgUserData.id,
         username: currentUser
     }).then(() => {
         showNotification("Task submitted for review!");
@@ -1467,29 +1641,6 @@ function claimDaily() {
     });
 }
 
-// Show deposit modal
-function showDepositModal() {
-    document.getElementById('depositAmount').value = "";
-    document.getElementById('transactionId').value = "";
-    document.getElementById('senderAccount').value = "";
-    document.getElementById('depositModal').classList.remove('hidden');
-}
-
-// Hide deposit modal
-function hideDepositModal() {
-    document.getElementById('depositModal').classList.add('hidden');
-}
-
-// Show QR code modal
-function showQrModal() {
-    document.getElementById('qrModal').classList.remove('hidden');
-}
-
-// Hide QR code modal
-function hideQrModal() {
-    document.getElementById('qrModal').classList.add('hidden');
-}
-
 // Submit deposit request
 function submitDeposit() {
     const amount = parseInt(document.getElementById('depositAmount').value);
@@ -1521,30 +1672,11 @@ function submitDeposit() {
         transactionId: transactionId,
         senderAccount: senderAccount,
         status: "pending",
-        requestedAt: Date.now(),
-        tgUserId: tgUserData.id
+        requestedAt: Date.now()
     }).then(() => {
         showNotification(`Deposit request submitted for ${amount} coins. Please wait for approval.`);
         hideDepositModal();
     });
-}
-
-// Show withdraw modal
-function showWithdrawModal() {
-    const minWithdraw = 100;
-    if ((userData.balance || 0) < minWithdraw) {
-        showNotification(`Minimum withdrawal is ${minWithdraw} coins (10 Taka)`);
-        return;
-    }
-    
-    document.getElementById('withdrawAmount').value = "";
-    document.getElementById('withdrawAccount').value = "";
-    document.getElementById('withdrawModal').classList.remove('hidden');
-}
-
-// Hide withdraw modal
-function hideWithdrawModal() {
-    document.getElementById('withdrawModal').classList.add('hidden');
 }
 
 // Submit withdraw request
@@ -1577,8 +1709,7 @@ function submitWithdraw() {
         method: method,
         account: account,
         status: "pending",
-        requestedAt: Date.now(),
-        tgUserId: tgUserData.id
+        requestedAt: Date.now()
     }).then(() => {
         // Deduct from user balance immediately
         db.ref('users/' + currentUser).update({
