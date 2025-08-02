@@ -23,7 +23,8 @@
         body {
             overflow: hidden;
             height: 100vh;
-            background-color: #f3f4f6;
+            background-color: #1a1a2e;
+            color: #fff;
         }
         
         /* Custom scrollbar */
@@ -56,25 +57,15 @@
             overflow-y: auto;
         }
         
-        /* Sidebar styles */
-        .sidebar {
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-        }
-        
-        .sidebar.open {
-            transform: translateX(0);
-        }
-        
         /* Header */
         .tg-header {
-            background-color: #0088cc;
+            background-color: #16213e;
             color: white;
         }
         
         /* Buttons */
         .tg-button {
-            background-color: #0088cc;
+            background-color: #0f3460;
             color: white;
             border-radius: 8px;
             padding: 8px 16px;
@@ -82,51 +73,40 @@
         }
         
         .tg-button:hover {
-            background-color: #0077b3;
+            background-color: #1a1a2e;
         }
         
         /* Cards */
         .tg-card {
-            background-color: white;
+            background-color: #16213e;
             border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        
-        /* Overlay for sidebar */
-        .overlay {
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
-        }
-        
-        .overlay.open {
-            opacity: 1;
-            visibility: visible;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: #fff;
+            border: 1px solid #0f3460;
         }
         
         /* Mining animation */
         @keyframes miningPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% { transform: scale(1); box-shadow: 0 0 10px rgba(74, 222, 128, 0.5); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(74, 222, 128, 0.8); }
+            100% { transform: scale(1); box-shadow: 0 0 10px rgba(74, 222, 128, 0.5); }
         }
         
         .mining-active {
             animation: miningPulse 2s infinite;
-            box-shadow: 0 0 15px rgba(74, 222, 128, 0.7);
         }
         
         /* Progress bar */
         .progress-bar {
             height: 6px;
             border-radius: 3px;
-            background-color: #e5e7eb;
+            background-color: #1a1a2e;
             overflow: hidden;
         }
         
         .progress-fill {
             height: 100%;
-            background-color: #10b981;
+            background: linear-gradient(90deg, #4ade80, #3b82f6);
             transition: width 0.3s ease;
         }
         
@@ -137,7 +117,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0,0,0,0.8);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -153,7 +133,7 @@
         }
         
         .modal-content {
-            background-color: white;
+            background-color: #16213e;
             border-radius: 12px;
             padding: 20px;
             width: 90%;
@@ -162,10 +142,122 @@
             overflow-y: auto;
             transform: translateY(20px);
             transition: transform 0.3s;
+            border: 1px solid #0f3460;
+            color: #fff;
         }
         
         .modal.open .modal-content {
             transform: translateY(0);
+        }
+        
+        /* Notification Banner */
+        .notification-banner {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            animation: slideIn 0.5s forwards, fadeOut 0.5s forwards 4.5s;
+        }
+        
+        @keyframes slideIn {
+            from { top: -100px; opacity: 0; }
+            to { top: 10px; opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #16213e;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            border-top: 1px solid #0f3460;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #a5b4fc;
+            text-decoration: none;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .nav-item.active {
+            color: #4ade80;
+        }
+        
+        .nav-item i {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .fixed-section {
+                height: calc(100vh - 56px - 60px);
+            }
+            
+            .mining-section {
+                flex-direction: column;
+            }
+        }
+        
+        /* Crypto animation */
+        .crypto-animation {
+            position: relative;
+            height: 100px;
+            overflow: hidden;
+        }
+        
+        .coin {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+            border-radius: 50%;
+            animation: float 5s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+        
+        /* Input styles */
+        input, select {
+            background-color: #1a1a2e;
+            border: 1px solid #0f3460;
+            color: #fff;
+            border-radius: 8px;
+            padding: 12px;
+            width: 100%;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
         }
         
         /* Ban screen */
@@ -175,7 +267,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: black;
+            background-color: #1a1a2e;
             color: white;
             display: flex;
             flex-direction: column;
@@ -184,17 +276,6 @@
             z-index: 2000;
             padding: 20px;
             text-align: center;
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 640px) {
-            .fixed-section {
-                height: calc(100vh - 56px);
-            }
-            
-            .mining-section {
-                flex-direction: column;
-            }
         }
     </style>
 </head>
@@ -224,18 +305,18 @@
             </button>
         </div>
         <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Username</label>
-            <input type="text" id="loginUsername" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter your username">
+            <label class="block text-gray-300 mb-2">Username</label>
+            <input type="text" id="loginUsername" class="w-full p-3 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter your username">
         </div>
         <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Password</label>
-            <input type="password" id="loginPassword" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter your password">
+            <label class="block text-gray-300 mb-2">Password</label>
+            <input type="password" id="loginPassword" class="w-full p-3 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter your password">
         </div>
         <button onclick="loginUser()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold transition-all btn-press">
             <i class="fas fa-sign-in-alt mr-2"></i> Login
         </button>
         <div class="mt-4 text-center">
-            <p class="text-sm text-gray-600">Don't have an account? <button onclick="showRegisterModal()" class="text-indigo-600 font-medium">Register</button></p>
+            <p class="text-sm text-gray-400">Don't have an account? <button onclick="showRegisterModal()" class="text-indigo-400 font-medium">Register</button></p>
         </div>
     </div>
 </div>
@@ -250,26 +331,26 @@
             </button>
         </div>
         <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Username</label>
-            <input type="text" id="registerUsername" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Choose a username">
+            <label class="block text-gray-300 mb-2">Username</label>
+            <input type="text" id="registerUsername" class="w-full p-3 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Choose a username">
         </div>
         <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Password</label>
-            <input type="password" id="registerPassword" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Create a password">
+            <label class="block text-gray-300 mb-2">Password</label>
+            <input type="password" id="registerPassword" class="w-full p-3 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Create a password">
         </div>
         <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Confirm Password</label>
-            <input type="password" id="registerConfirmPassword" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Confirm your password">
+            <label class="block text-gray-300 mb-2">Confirm Password</label>
+            <input type="password" id="registerConfirmPassword" class="w-full p-3 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Confirm your password">
         </div>
         <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Referral Code (Optional)</label>
-            <input type="text" id="referralCode" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter referral code if any">
+            <label class="block text-gray-300 mb-2">Referral Code (Optional)</label>
+            <input type="text" id="referralCode" class="w-full p-3 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter referral code if any">
         </div>
         <button onclick="registerUser()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold transition-all btn-press">
             <i class="fas fa-user-plus mr-2"></i> Register
         </button>
         <div class="mt-4 text-center">
-            <p class="text-sm text-gray-600">Already have an account? <button onclick="showLoginModal()" class="text-indigo-600 font-medium">Login</button></p>
+            <p class="text-sm text-gray-400">Already have an account? <button onclick="showLoginModal()" class="text-indigo-400 font-medium">Login</button></p>
         </div>
     </div>
 </div>
@@ -278,36 +359,23 @@
 <div id="appContainer" class="h-full flex flex-col hidden">
     <!-- Header -->
     <div class="tg-header p-3 flex justify-between items-center">
-        <button onclick="toggleSidebar()" class="text-white p-2 rounded-full hover:bg-white hover:bg-opacity-10 transition-all btn-press">
-            <i class="fas fa-bars"></i>
-        </button>
-        <h2 class="font-bold text-lg">TaskEarn</h2>
+        <h2 class="font-bold text-lg">GE Coin Miner</h2>
         <div class="flex items-center space-x-2">
             <div id="balanceDisplay" class="text-sm bg-white bg-opacity-20 px-2 py-1 rounded-full">
-                <i class="fas fa-coins mr-1"></i> 0 Coins
+                <i class="fas fa-coins mr-1"></i> 0 GE
             </div>
         </div>
     </div>
 
-    <!-- Notification Banner -->
-    <div id="notificationBanner" class="hidden bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-3">
-        <div class="flex justify-between items-center">
-            <p id="notificationText"></p>
-            <button onclick="hideNotification()" class="text-blue-700 transition-all hover:scale-110">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    </div>
-
     <!-- Main Content - Fixed Height with Scroll -->
-    <div id="mainContent" class="fixed-section p-3 bg-gray-100 scrollable">
+    <div id="mainContent" class="fixed-section p-3 bg-gray-900 scrollable">
         <!-- Balance Card -->
         <div class="tg-card p-4 mb-3 transition-all animate-fadeIn">
             <div class="flex justify-between items-center">
                 <div>
-                    <h3 class="text-gray-500 text-sm">Total Balance</h3>
-                    <p id="mainBalance" class="text-2xl font-bold">0 Coins</p>
-                    <p class="text-sm text-gray-500 mt-1">100 Coins = 10 Taka</p>
+                    <h3 class="text-gray-400 text-sm">Total Balance</h3>
+                    <p id="mainBalance" class="text-2xl font-bold">0 GE</p>
+                    <p class="text-sm text-gray-400 mt-1">1 GE = 0.5 USD</p>
                 </div>
                 <button onclick="showWithdrawModal()" class="tg-button flex items-center">
                     <i class="fas fa-wallet mr-2"></i> Withdraw
@@ -318,12 +386,12 @@
         <!-- Quick Stats -->
         <div class="grid grid-cols-2 gap-3 mb-3">
             <div class="tg-card p-3 transition-all animate-fadeIn">
-                <p class="text-gray-500 text-xs">Today's Earnings</p>
-                <p id="todayEarnings" class="font-bold">0 Coins</p>
+                <p class="text-gray-400 text-xs">Today's Earnings</p>
+                <p id="todayEarnings" class="font-bold">0 GE</p>
             </div>
             <div class="tg-card p-3 transition-all animate-fadeIn">
-                <p class="text-gray-500 text-xs">Total Earnings</p>
-                <p id="totalEarningsMini" class="font-bold">0 Coins</p>
+                <p class="text-gray-400 text-xs">Total Earnings</p>
+                <p id="totalEarningsMini" class="font-bold">0 GE</p>
             </div>
         </div>
 
@@ -333,17 +401,17 @@
                 <div class="flex items-center">
                     <i class="fas fa-microchip text-2xl text-indigo-600 mr-3"></i>
                     <div>
-                        <h3 class="font-bold">Auto Coin Mining</h3>
-                        <p class="text-xs text-gray-500" id="miningStatus">Not Active</p>
+                        <h3 class="font-bold">GE Coin Mining</h3>
+                        <p class="text-xs text-gray-400" id="miningStatus">Not Active</p>
                     </div>
                 </div>
-                <button id="miningToggle" onclick="toggleMining()" class="bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm font-medium transition-all">
+                <button id="miningToggle" onclick="toggleMining()" class="bg-gray-700 text-white px-3 py-1 rounded-full text-sm font-medium transition-all">
                     Start
                 </button>
             </div>
             
             <div class="mb-2">
-                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                <div class="flex justify-between text-xs text-gray-400 mb-1">
                     <span>Mining Progress</span>
                     <span id="miningProgressText">0%</span>
                 </div>
@@ -353,30 +421,30 @@
             </div>
             
             <div class="grid grid-cols-2 gap-2 mt-3">
-                <div class="bg-gray-50 p-2 rounded text-center">
-                    <p class="text-xs text-gray-500">Current Rate</p>
-                    <p class="font-bold" id="miningRate">5 coins/hr</p>
+                <div class="bg-gray-800 p-2 rounded text-center">
+                    <p class="text-xs text-gray-400">Current Rate</p>
+                    <p class="font-bold" id="miningRate">0.000002 GE/s</p>
                 </div>
-                <div class="bg-gray-50 p-2 rounded text-center">
-                    <p class="text-xs text-gray-500">Total Mined</p>
-                    <p class="font-bold" id="totalMined">0 coins</p>
+                <div class="bg-gray-800 p-2 rounded text-center">
+                    <p class="text-xs text-gray-400">Total Mined</p>
+                    <p class="font-bold" id="totalMined">0 GE</p>
                 </div>
             </div>
             
-            <!-- Deposit to Boost Mining -->
-            <div class="mt-4 border-t pt-3">
-                <h4 class="font-medium text-sm mb-2">Boost Mining Power</h4>
-                <p class="text-xs text-gray-500 mb-2">Deposit 100 coins to activate auto mining</p>
-                <button onclick="showDepositModal()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium transition-all btn-press">
-                    <i class="fas fa-coins mr-2"></i> Deposit Coins
-                </button>
+            <!-- Mining Visualization -->
+            <div class="crypto-animation mt-4">
+                <div class="coin" style="left: 10%; animation-delay: 0s;"></div>
+                <div class="coin" style="left: 30%; animation-delay: 1s;"></div>
+                <div class="coin" style="left: 50%; animation-delay: 2s;"></div>
+                <div class="coin" style="left: 70%; animation-delay: 3s;"></div>
+                <div class="coin" style="left: 90%; animation-delay: 4s;"></div>
             </div>
         </div>
 
         <!-- Daily Reward Section -->
         <div class="mb-3 animate-fadeIn">
-            <button onclick="claimDaily()" id="dailyButton" class="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all btn-press">
-                <i class="fas fa-gift mr-2"></i> Claim Daily Reward (10 Coins)
+            <button onclick="claimDaily()" id="dailyButton" class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white py-3 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all btn-press">
+                <i class="fas fa-gift mr-2"></i> Claim Daily Reward (0.1 GE)
             </button>
         </div>
 
@@ -397,52 +465,29 @@
     </div>
 </div>
 
-<!-- Sidebar -->
-<div id="sidebar" class="sidebar fixed top-0 left-0 bottom-0 w-64 bg-white z-50 shadow-xl">
-    <!-- Sidebar Header -->
-    <div class="tg-header p-4 flex items-center justify-between">
-        <h3 class="font-bold text-white">Menu</h3>
-        <button onclick="toggleSidebar()" class="text-white p-1 rounded-full hover:bg-white hover:bg-opacity-10 transition-all btn-press">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    
-    <!-- User Profile -->
-    <div class="p-4 flex items-center border-b border-gray-200">
-        <div class="bg-indigo-100 p-3 rounded-full mr-3">
-            <i class="fas fa-user text-indigo-600 text-xl"></i>
-        </div>
-        <div>
-            <h3 id="sidebarUsername" class="font-bold">Username</h3>
-            <p class="text-xs text-gray-500">@username</p>
-        </div>
-    </div>
-    
-    <!-- Sidebar Menu -->
-    <div class="py-2">
-        <button onclick="showTaskSection()" class="w-full text-left px-4 py-3 flex items-center hover:bg-gray-100 transition-all">
-            <i class="fas fa-tasks mr-3 text-indigo-600"></i> Tasks
-        </button>
-        <button onclick="showHistorySection()" class="w-full text-left px-4 py-3 flex items-center hover:bg-gray-100 transition-all">
-            <i class="fas fa-history mr-3 text-indigo-600"></i> History
-        </button>
-        <button onclick="showMiningSection()" class="w-full text-left px-4 py-3 flex items-center hover:bg-gray-100 transition-all">
-            <i class="fas fa-microchip mr-3 text-indigo-600"></i> Mining
-        </button>
-        <button onclick="showProfileSection()" class="w-full text-left px-4 py-3 flex items-center hover:bg-gray-100 transition-all">
-            <i class="fas fa-user mr-3 text-indigo-600"></i> Profile
-        </button>
-        <button onclick="showReferralSection()" class="w-full text-left px-4 py-3 flex items-center hover:bg-gray-100 transition-all">
-            <i class="fas fa-user-plus mr-3 text-indigo-600"></i> Refer & Earn
-        </button>
-        <button onclick="logoutUser()" class="w-full text-left px-4 py-3 flex items-center hover:bg-gray-100 transition-all text-red-500">
-            <i class="fas fa-sign-out-alt mr-3"></i> Logout
-        </button>
-    </div>
+<!-- Bottom Navigation -->
+<div class="bottom-nav">
+    <a href="#" onclick="showTaskSection()" class="nav-item active">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+    </a>
+    <a href="#" onclick="showMiningSection()" class="nav-item">
+        <i class="fas fa-microchip"></i>
+        <span>Mining</span>
+    </a>
+    <a href="#" onclick="showHistorySection()" class="nav-item">
+        <i class="fas fa-history"></i>
+        <span>History</span>
+    </a>
+    <a href="#" onclick="showProfileSection()" class="nav-item">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
+    </a>
+    <a href="#" onclick="showReferralSection()" class="nav-item">
+        <i class="fas fa-user-plus"></i>
+        <span>Referrals</span>
+    </a>
 </div>
-
-<!-- Overlay for sidebar -->
-<div id="overlay" class="overlay fixed inset-0 bg-black bg-opacity-50 z-40" onclick="toggleSidebar()"></div>
 
 <!-- History Section (Hidden by default) -->
 <div id="historySection" class="h-full flex flex-col hidden">
@@ -453,7 +498,7 @@
         <h2 class="font-bold text-lg text-white">Task History</h2>
     </div>
     
-    <div class="fixed-section p-3 bg-gray-100 scrollable">
+    <div class="fixed-section p-3 bg-gray-900 scrollable">
         <div id="historyContainer" class="space-y-3">
             <!-- History items will be loaded here -->
         </div>
@@ -473,31 +518,31 @@
         <button onclick="showTaskSection()" class="text-white p-2 rounded-full hover:bg-white hover:bg-opacity-10 transition-all btn-press mr-2">
             <i class="fas fa-arrow-left"></i>
         </button>
-        <h2 class="font-bold text-lg text-white">Auto Mining</h2>
+        <h2 class="font-bold text-lg text-white">GE Coin Mining</h2>
     </div>
     
-    <div class="fixed-section p-3 bg-gray-100 scrollable">
+    <div class="fixed-section p-3 bg-gray-900 scrollable">
         <div class="tg-card p-4 mb-3 transition-all animate-fadeIn">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center">
                     <i class="fas fa-microchip text-3xl text-indigo-600 mr-3"></i>
                     <div>
-                        <h3 class="font-bold text-lg">Auto Coin Mining</h3>
-                        <p class="text-sm text-gray-500" id="miningStatusFull">Status: Not Active</p>
+                        <h3 class="font-bold text-lg">GE Coin Mining</h3>
+                        <p class="text-sm text-gray-400" id="miningStatusFull">Status: Not Active</p>
                     </div>
                 </div>
-                <button id="miningToggleFull" onclick="toggleMining()" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full text-sm font-medium transition-all">
+                <button id="miningToggleFull" onclick="toggleMining()" class="bg-gray-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-all">
                     Start Mining
                 </button>
             </div>
             
             <div class="mining-section flex items-center space-x-4 mb-4">
-                <div id="miningVisual" class="bg-indigo-100 p-6 rounded-full text-center transition-all">
-                    <i class="fas fa-microchip text-4xl text-indigo-600"></i>
+                <div id="miningVisual" class="bg-indigo-900 p-6 rounded-full text-center transition-all">
+                    <i class="fas fa-microchip text-4xl text-indigo-400"></i>
                 </div>
                 <div class="flex-1">
                     <div class="mb-2">
-                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
                             <span>Mining Progress</span>
                             <span id="miningProgressTextFull">0%</span>
                         </div>
@@ -505,46 +550,42 @@
                             <div id="miningProgressFillFull" class="progress-fill" style="width: 0%"></div>
                         </div>
                     </div>
-                    <p class="text-xs text-gray-500">Current mining session: <span id="miningSessionTime">0:00</span></p>
+                    <p class="text-xs text-gray-400">Current mining session: <span id="miningSessionTime">0:00</span></p>
                 </div>
             </div>
             
             <div class="grid grid-cols-3 gap-2 mb-4">
-                <div class="bg-gray-50 p-2 rounded text-center">
-                    <p class="text-xs text-gray-500">Current Rate</p>
-                    <p class="font-bold" id="miningRateFull">5 coins/hr</p>
+                <div class="bg-gray-800 p-2 rounded text-center">
+                    <p class="text-xs text-gray-400">Current Rate</p>
+                    <p class="font-bold" id="miningRateFull">0.000002 GE/s</p>
                 </div>
-                <div class="bg-gray-50 p-2 rounded text-center">
-                    <p class="text-xs text-gray-500">Today Mined</p>
-                    <p class="font-bold" id="todayMined">0 coins</p>
+                <div class="bg-gray-800 p-2 rounded text-center">
+                    <p class="text-xs text-gray-400">Today Mined</p>
+                    <p class="font-bold" id="todayMined">0 GE</p>
                 </div>
-                <div class="bg-gray-50 p-2 rounded text-center">
-                    <p class="text-xs text-gray-500">Total Mined</p>
-                    <p class="font-bold" id="totalMinedFull">0 coins</p>
+                <div class="bg-gray-800 p-2 rounded text-center">
+                    <p class="text-xs text-gray-400">Total Mined</p>
+                    <p class="font-bold" id="totalMinedFull">0 GE</p>
                 </div>
             </div>
             
-            <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-4">
-                <h4 class="font-bold text-blue-800 mb-2">How Auto Mining Works</h4>
-                <ul class="text-sm text-blue-700 space-y-2">
+            <div class="bg-blue-900 border border-blue-700 rounded-lg p-3 mb-4">
+                <h4 class="font-bold text-blue-200 mb-2">How GE Mining Works</h4>
+                <ul class="text-sm text-blue-200 space-y-2">
                     <li class="flex items-start">
-                        <i class="fas fa-check-circle mt-1 mr-2 text-blue-500"></i>
-                        <span>Deposit 100 coins to activate mining</span>
+                        <i class="fas fa-check-circle mt-1 mr-2 text-blue-400"></i>
+                        <span>Earn 0.000002 GE per second passively</span>
                     </li>
                     <li class="flex items-start">
-                        <i class="fas fa-check-circle mt-1 mr-2 text-blue-500"></i>
-                        <span>Earn 5 coins per hour passively</span>
+                        <i class="fas fa-check-circle mt-1 mr-2 text-blue-400"></i>
+                        <span>1 GE = 0.5 USD</span>
                     </li>
                     <li class="flex items-start">
-                        <i class="fas fa-check-circle mt-1 mr-2 text-blue-500"></i>
-                        <span>Higher deposits increase mining rate</span>
+                        <i class="fas fa-check-circle mt-1 mr-2 text-blue-400"></i>
+                        <span>Minimum withdrawal: 10 GE ($5)</span>
                     </li>
                 </ul>
             </div>
-            
-            <button onclick="showDepositModal()" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all btn-press">
-                <i class="fas fa-coins mr-2"></i> Deposit Coins to Start Mining
-            </button>
         </div>
         
         <div class="tg-card p-4 transition-all animate-fadeIn">
@@ -571,41 +612,41 @@
         <h2 class="font-bold text-lg text-white">My Profile</h2>
     </div>
     
-    <div class="fixed-section p-3 bg-gray-100 scrollable">
+    <div class="fixed-section p-3 bg-gray-900 scrollable">
         <div class="tg-card p-4 mb-3 transition-all animate-fadeIn">
             <div class="flex items-center space-x-4 mb-4">
-                <div class="bg-indigo-100 p-3 rounded-full transition-all hover:bg-indigo-200">
-                    <i class="fas fa-user text-indigo-600 text-2xl"></i>
+                <div class="bg-indigo-900 p-3 rounded-full transition-all hover:bg-indigo-800">
+                    <i class="fas fa-user text-indigo-400 text-2xl"></i>
                 </div>
                 <div>
                     <h3 id="profileUsername" class="font-bold text-lg">@username</h3>
-                    <p id="joinDate" class="text-gray-600 text-sm">Joined 2 days ago</p>
+                    <p id="joinDate" class="text-gray-400 text-sm">Joined 2 days ago</p>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-3">
-                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
-                    <p class="text-gray-500 text-sm">Total Earned</p>
-                    <p id="totalEarned" class="font-bold">0 Coins</p>
+                <div class="bg-gray-800 p-3 rounded-lg transition-all hover:bg-gray-700">
+                    <p class="text-gray-400 text-sm">Total Earned</p>
+                    <p id="totalEarned" class="font-bold">0 GE</p>
                 </div>
-                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
-                    <p class="text-gray-500 text-sm">Withdrawn</p>
-                    <p id="totalWithdrawn" class="font-bold">0 Coins</p>
+                <div class="bg-gray-800 p-3 rounded-lg transition-all hover:bg-gray-700">
+                    <p class="text-gray-400 text-sm">Withdrawn</p>
+                    <p id="totalWithdrawn" class="font-bold">0 GE</p>
                 </div>
-                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
-                    <p class="text-gray-500 text-sm">Referral Earnings</p>
-                    <p id="referralEarnings" class="font-bold">0 Coins</p>
+                <div class="bg-gray-800 p-3 rounded-lg transition-all hover:bg-gray-700">
+                    <p class="text-gray-400 text-sm">Referral Earnings</p>
+                    <p id="referralEarnings" class="font-bold">0 GE</p>
                 </div>
-                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
-                    <p class="text-gray-500 text-sm">Referrals</p>
+                <div class="bg-gray-800 p-3 rounded-lg transition-all hover:bg-gray-700">
+                    <p class="text-gray-400 text-sm">Referrals</p>
                     <p id="referralCount" class="font-bold">0</p>
                 </div>
-                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
-                    <p class="text-gray-500 text-sm">Mining Earnings</p>
-                    <p id="miningEarnings" class="font-bold">0 Coins</p>
+                <div class="bg-gray-800 p-3 rounded-lg transition-all hover:bg-gray-700">
+                    <p class="text-gray-400 text-sm">Mining Earnings</p>
+                    <p id="miningEarnings" class="font-bold">0 GE</p>
                 </div>
-                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
-                    <p class="text-gray-500 text-sm">Mining Power</p>
-                    <p id="miningPower" class="font-bold">0%</p>
+                <div class="bg-gray-800 p-3 rounded-lg transition-all hover:bg-gray-700">
+                    <p class="text-gray-400 text-sm">Mining Power</p>
+                    <p id="miningPower" class="font-bold">100%</p>
                 </div>
             </div>
         </div>
@@ -614,19 +655,23 @@
             <h3 class="font-bold mb-3">Account Information</h3>
             <div class="space-y-3">
                 <div>
-                    <p class="text-gray-500 text-sm">Status</p>
-                    <p id="accountStatus" class="font-medium text-green-600">Active</p>
+                    <p class="text-gray-400 text-sm">Status</p>
+                    <p id="accountStatus" class="font-medium text-green-500">Active</p>
                 </div>
                 <div>
-                    <p class="text-gray-500 text-sm">Balance Conversion</p>
-                    <p class="font-medium">100 Coins = 10 Taka</p>
+                    <p class="text-gray-400 text-sm">Balance Conversion</p>
+                    <p class="font-medium">1 GE = 0.5 USD</p>
                 </div>
                 <div>
-                    <p class="text-gray-500 text-sm">Mining Status</p>
+                    <p class="text-gray-400 text-sm">Mining Status</p>
                     <p id="profileMiningStatus" class="font-medium">Inactive</p>
                 </div>
             </div>
         </div>
+        
+        <button onclick="logoutUser()" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-bold mt-4 transition-all btn-press">
+            <i class="fas fa-sign-out-alt mr-2"></i> Logout
+        </button>
     </div>
 </div>
 
@@ -639,40 +684,40 @@
         <h2 class="font-bold text-lg text-white">Refer & Earn</h2>
     </div>
     
-    <div class="fixed-section p-3 bg-gray-100 scrollable">
+    <div class="fixed-section p-3 bg-gray-900 scrollable">
         <div class="tg-card p-4 mb-3 transition-all animate-fadeIn">
             <div class="flex items-center mb-3">
-                <div class="bg-green-100 p-3 rounded-full mr-3">
-                    <i class="fas fa-user-plus text-green-600 text-xl"></i>
+                <div class="bg-green-900 p-3 rounded-full mr-3">
+                    <i class="fas fa-user-plus text-green-400 text-xl"></i>
                 </div>
                 <div>
                     <h3 class="font-bold">Earn with Friends</h3>
-                    <p class="text-sm text-gray-600">Get 5% of your friends' earnings</p>
+                    <p class="text-sm text-gray-400">Get 5% of your friends' earnings</p>
                 </div>
             </div>
             
-            <div class="bg-green-50 border border-green-100 rounded-lg p-3 mb-4">
-                <h4 class="font-bold text-green-800 mb-2">How it works</h4>
-                <ul class="text-sm text-green-700 space-y-2">
+            <div class="bg-green-900 border border-green-700 rounded-lg p-3 mb-4">
+                <h4 class="font-bold text-green-200 mb-2">How it works</h4>
+                <ul class="text-sm text-green-200 space-y-2">
                     <li class="flex items-start">
-                        <i class="fas fa-check-circle mt-1 mr-2 text-green-500"></i>
+                        <i class="fas fa-check-circle mt-1 mr-2 text-green-400"></i>
                         <span>Share your referral link with friends</span>
                     </li>
                     <li class="flex items-start">
-                        <i class="fas fa-check-circle mt-1 mr-2 text-green-500"></i>
+                        <i class="fas fa-check-circle mt-1 mr-2 text-green-400"></i>
                         <span>They sign up using your link</span>
                     </li>
                     <li class="flex items-start">
-                        <i class="fas fa-check-circle mt-1 mr-2 text-green-500"></i>
+                        <i class="fas fa-check-circle mt-1 mr-2 text-green-400"></i>
                         <span>You earn 5% of all their earnings</span>
                     </li>
                 </ul>
             </div>
             
             <div class="mb-4">
-                <label class="block text-gray-700 mb-2">Your Referral Link</label>
-                <div class="flex items-center bg-gray-100 p-2 rounded">
-                    <input type="text" id="referralLink" class="flex-1 bg-transparent border-none text-gray-800" value="https://example.com/earn?ref=username" readonly>
+                <label class="block text-gray-400 mb-2">Your Referral Link</label>
+                <div class="flex items-center bg-gray-800 p-2 rounded">
+                    <input type="text" id="referralLink" class="flex-1 bg-transparent border-none text-white" value="https://example.com/earn?ref=username" readonly>
                     <button onclick="copyReferralLink()" class="ml-2 bg-indigo-600 text-white px-3 py-1 rounded text-sm font-bold transition-all hover:bg-indigo-700 btn-press">
                         <i class="fas fa-copy mr-1"></i> Copy
                     </button>
@@ -680,13 +725,13 @@
             </div>
             
             <div class="grid grid-cols-2 gap-3">
-                <div class="bg-gray-50 p-3 rounded-lg text-center">
-                    <p class="text-gray-500 text-sm">Total Referrals</p>
+                <div class="bg-gray-800 p-3 rounded-lg text-center">
+                    <p class="text-gray-400 text-sm">Total Referrals</p>
                     <p id="sidebarReferralCount" class="font-bold text-lg">0</p>
                 </div>
-                <div class="bg-gray-50 p-3 rounded-lg text-center">
-                    <p class="text-gray-500 text-sm">Earnings</p>
-                    <p id="sidebarReferralEarnings" class="font-bold text-lg">0 Coins</p>
+                <div class="bg-gray-800 p-3 rounded-lg text-center">
+                    <p class="text-gray-400 text-sm">Earnings</p>
+                    <p id="sidebarReferralEarnings" class="font-bold text-lg">0 GE</p>
                 </div>
             </div>
         </div>
@@ -694,31 +739,31 @@
         <div class="tg-card p-4 transition-all animate-fadeIn">
             <h3 class="font-bold mb-3">Referral Leaderboard</h3>
             <div id="referralLeaderboard" class="space-y-3">
-                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                <div class="flex items-center justify-between p-2 hover:bg-gray-800 rounded">
                     <div class="flex items-center">
                         <span class="font-bold mr-2">1.</span>
-                        <div class="bg-indigo-100 p-2 rounded-full mr-2">
-                            <i class="fas fa-user text-indigo-600"></i>
+                        <div class="bg-indigo-900 p-2 rounded-full mr-2">
+                            <i class="fas fa-user text-indigo-400"></i>
                         </div>
                         <span>top_referrer</span>
                     </div>
                     <span class="font-bold">50</span>
                 </div>
-                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                <div class="flex items-center justify-between p-2 hover:bg-gray-800 rounded">
                     <div class="flex items-center">
                         <span class="font-bold mr-2">2.</span>
-                        <div class="bg-indigo-100 p-2 rounded-full mr-2">
-                            <i class="fas fa-user text-indigo-600"></i>
+                        <div class="bg-indigo-900 p-2 rounded-full mr-2">
+                            <i class="fas fa-user text-indigo-400"></i>
                         </div>
                         <span>second_referrer</span>
                     </div>
                     <span class="font-bold">30</span>
                 </div>
-                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                <div class="flex items-center justify-between p-2 hover:bg-gray-800 rounded">
                     <div class="flex items-center">
                         <span class="font-bold mr-2">3.</span>
-                        <div class="bg-indigo-100 p-2 rounded-full mr-2">
-                            <i class="fas fa-user text-indigo-600"></i>
+                        <div class="bg-indigo-900 p-2 rounded-full mr-2">
+                            <i class="fas fa-user text-indigo-400"></i>
                         </div>
                         <span>third_referrer</span>
                     </div>
@@ -733,28 +778,28 @@
 <div id="withdrawModal" class="modal">
     <div class="modal-content animate-fadeIn">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-xl">Withdraw Coins</h3>
+            <h3 class="font-bold text-xl">Withdraw GE Coins</h3>
             <button onclick="hideWithdrawModal()" class="text-gray-500 hover:text-gray-700 transition-all btn-press">
                 <i class="fas fa-times"></i>
             </button>
         </div>
         <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Amount (Min 100 Coins = 10 Taka)</label>
-            <input type="number" id="withdrawAmount" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter amount">
+            <label class="block text-gray-300 mb-2">Amount (Min 10 GE = $5)</label>
+            <input type="number" id="withdrawAmount" class="w-full p-3 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter amount">
         </div>
         <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Withdrawal Method</label>
-            <select id="withdrawMethod" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
-                <option value="nagad">Nagad</option>
-                <option value="bkash">bKash</option>
-                <option value="rocket">Rocket</option>
+            <label class="block text-gray-300 mb-2">Withdrawal Method</label>
+            <select id="withdrawMethod" class="w-full p-3 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
                 <option value="binance">Binance</option>
                 <option value="bitget">Bitget</option>
+                <option value="coinbase">Coinbase</option>
+                <option value="kucoin">KuCoin</option>
+                <option value="trustwallet">Trust Wallet</option>
             </select>
         </div>
         <div id="accountNumberField" class="mb-4">
-            <label class="block text-gray-700 mb-2">Account Number</label>
-            <input type="text" id="withdrawAccount" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter account number">
+            <label class="block text-gray-300 mb-2">Wallet Address</label>
+            <input type="text" id="withdrawAccount" class="w-full p-3 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter wallet address">
         </div>
         <button onclick="submitWithdraw()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold transition-all btn-press">
             Submit Withdraw Request
@@ -762,79 +807,9 @@
     </div>
 </div>
 
-<!-- Deposit Modal -->
-<div id="depositModal" class="modal">
-    <div class="modal-content animate-fadeIn">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-xl">Deposit Coins</h3>
-            <button onclick="hideDepositModal()" class="text-gray-500 hover:text-gray-700 transition-all btn-press">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Amount (Min 100 Coins)</label>
-            <input type="number" id="depositAmount" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter amount to deposit">
-        </div>
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Payment Method</label>
-            <select id="depositMethod" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
-                <option value="nagad">Nagad</option>
-                <option value="bkash">bKash</option>
-                <option value="rocket">Rocket</option>
-            </select>
-        </div>
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Send Payment To</label>
-            <div class="bg-gray-100 p-3 rounded-lg">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="font-medium">Nagad:</span>
-                    <span class="font-bold">017XXXXXXXX</span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="font-medium">bKash:</span>
-                    <span class="font-bold">017XXXXXXXX</span>
-                </div>
-                <div class="flex items-center justify-between mt-2">
-                    <span class="font-medium">Rocket:</span>
-                    <span class="font-bold">017XXXXXXXX</span>
-                </div>
-            </div>
-        </div>
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Transaction ID</label>
-            <input type="text" id="transactionId" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter transaction ID">
-        </div>
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Your Account Number</label>
-            <input type="text" id="senderAccount" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter your account number">
-        </div>
-        <button onclick="submitDeposit()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold transition-all btn-press">
-            <i class="fas fa-coins mr-2"></i> Submit Deposit Request
-        </button>
-    </div>
-</div>
-
-<!-- QR Code Modal -->
-<div id="qrModal" class="modal">
-    <div class="modal-content animate-fadeIn">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-xl">Scan QR Code to Pay</h3>
-            <button onclick="hideQrModal()" class="text-gray-500 hover:text-gray-700 transition-all btn-press">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="text-center mb-4">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://example.com/pay" alt="QR Code" class="mx-auto mb-3">
-            <p class="text-sm text-gray-600">Scan this QR code with your mobile payment app</p>
-        </div>
-        <div class="bg-gray-100 p-3 rounded-lg mb-4">
-            <p class="text-center font-bold">017XXXXXXXX</p>
-            <p class="text-center text-sm text-gray-600" id="qrPaymentMethod">Nagad</p>
-        </div>
-        <button onclick="copyPaymentNumber()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium transition-all btn-press">
-            <i class="fas fa-copy mr-2"></i> Copy Number
-        </button>
-    </div>
+<!-- Notification Banner -->
+<div id="notificationBanner" class="notification-banner hidden">
+    <p id="notificationText"></p>
 </div>
 
 <!-- Firebase configuration -->
@@ -861,6 +836,7 @@ let miningInterval = null;
 let miningSessionStart = 0;
 let miningProgress = 0;
 let miningSessionSeconds = 0;
+let miningEarnings = 0;
 
 // Initialize the app
 function initApp() {
@@ -885,11 +861,6 @@ function initApp() {
     // Handle withdraw method change
     document.getElementById('withdrawMethod').addEventListener('change', function() {
         updateWithdrawMethodFields(this.value);
-    });
-    
-    // Handle deposit method change
-    document.getElementById('depositMethod').addEventListener('change', function() {
-        updateQrCode(this.value);
     });
 }
 
@@ -990,8 +961,8 @@ function registerUser() {
             
             // Create new user
             const userData = { 
-                balance: 10, // Starting bonus
-                totalEarned: 10,
+                balance: 0.1, // Starting bonus
+                totalEarned: 0.1,
                 totalWithdrawn: 0,
                 referralEarnings: 0,
                 referralCount: 0,
@@ -999,10 +970,9 @@ function registerUser() {
                 lastClaim: 0,
                 status: "active",
                 joinedAt: Date.now(),
-                miningDeposit: 0,
                 miningActive: false,
                 miningEarnings: 0,
-                miningRate: 5, // Base rate 5 coins per hour
+                miningRate: 0.000002, // 0.000002 GE per second
                 miningLastUpdate: 0
             };
             
@@ -1023,152 +993,24 @@ function registerUser() {
                 localStorage.setItem('loggedUser', currentUser);
                 hideRegisterModal();
                 loadUser();
-                showNotification("Registration successful! You received 10 bonus coins.");
+                showNotification("Registration successful! You received 0.1 GE bonus.");
             });
         }
     });
 }
 
-// Load user data
-function loadUser() {
-    document.getElementById('loadingScreen').classList.add('hidden');
-    document.getElementById('appContainer').classList.remove('hidden');
-    showTaskSection();
-    
-    // Update UI with user data
-    document.getElementById('sidebarUsername').textContent = currentUser;
-    
-    // Set referral link
-    document.getElementById('referralLink').value = `https://example.com/earn?ref=${currentUser}`;
-    
-    // Listen for user data changes
-    db.ref('users/' + currentUser).on('value', snapshot => {
-        userData = snapshot.val() || {};
-        
-        // Check if user is banned
-        if (userData.status === "banned") {
-            document.getElementById('banScreen').classList.remove('hidden');
-            document.getElementById('appContainer').classList.add('hidden');
-            document.getElementById('historySection').classList.add('hidden');
-            document.getElementById('miningSection').classList.add('hidden');
-            document.getElementById('profileSection').classList.add('hidden');
-            document.getElementById('referralSection').classList.add('hidden');
-            return;
-        }
-        
-        // Update balance displays
-        document.getElementById('balanceDisplay').innerHTML = `
-            <i class="fas fa-coins mr-1"></i> ${userData.balance || 0} Coins
-        `;
-        document.getElementById('mainBalance').textContent = `${userData.balance || 0} Coins`;
-        document.getElementById('totalEarningsMini').textContent = `${userData.totalEarned || 0} Coins`;
-        
-        // Calculate today's earnings (since midnight)
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayEarnings = userData.todayEarnings || {};
-        let todayTotal = 0;
-        
-        Object.keys(todayEarnings).forEach(key => {
-            if (todayEarnings[key].timestamp >= today.getTime()) {
-                todayTotal += todayEarnings[key].amount || 0;
-            }
-        });
-        
-        document.getElementById('todayEarnings').textContent = `${todayTotal} Coins`;
-        
-        // Update mining status
-        updateMiningUI();
-        
-        // Update profile section if visible
-        if (!document.getElementById('profileSection').classList.contains('hidden')) {
-            updateProfileSection();
-        }
-        
-        // Update referral section if visible
-        if (!document.getElementById('referralSection').classList.contains('hidden')) {
-            updateReferralSection();
-        }
-        
-        // Update mining section if visible
-        if (!document.getElementById('miningSection').classList.contains('hidden')) {
-            updateMiningSection();
-        }
-    });
-    
-    loadTasks();
-    loadTaskHistory();
-    loadMiningHistory();
-    
-    // Auto approve pending tasks after 10 minutes
-    checkPendingTasks();
-}
-
 // Update withdraw method fields based on selection
 function updateWithdrawMethodFields(method) {
     const accountField = document.getElementById('accountNumberField');
-    
-    if (method === 'binance' || method === 'bitget') {
-        accountField.querySelector('label').textContent = 'Wallet Address';
-        accountField.querySelector('input').placeholder = 'Enter wallet address';
-    } else {
-        accountField.querySelector('label').textContent = 'Account Number';
-        accountField.querySelector('input').placeholder = 'Enter account number';
-    }
-}
-
-// Update QR code based on payment method
-function updateQrCode(method) {
-    const qrMethodElement = document.getElementById('qrPaymentMethod');
-    let number = '';
-    
-    switch(method) {
-        case 'nagad':
-            number = '017XXXXXXXX';
-            qrMethodElement.textContent = 'Nagad';
-            break;
-        case 'bkash':
-            number = '017XXXXXXXX';
-            qrMethodElement.textContent = 'bKash';
-            break;
-        case 'rocket':
-            number = '017XXXXXXXX';
-            qrMethodElement.textContent = 'Rocket';
-            break;
-    }
-    
-    // Update the QR code image src
-    document.querySelector('#qrModal img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${number}`;
-}
-
-// Show deposit modal
-function showDepositModal() {
-    document.getElementById('depositAmount').value = "";
-    document.getElementById('transactionId').value = "";
-    document.getElementById('senderAccount').value = "";
-    document.getElementById('depositModal').classList.add('open');
-}
-
-// Hide deposit modal
-function hideDepositModal() {
-    document.getElementById('depositModal').classList.remove('open');
-}
-
-// Show QR code modal
-function showQrModal() {
-    document.getElementById('qrModal').classList.add('open');
-}
-
-// Hide QR code modal
-function hideQrModal() {
-    document.getElementById('qrModal').classList.remove('open');
+    accountField.querySelector('label').textContent = 'Wallet Address';
+    accountField.querySelector('input').placeholder = 'Enter wallet address';
 }
 
 // Show withdraw modal
 function showWithdrawModal() {
-    const minWithdraw = 100;
+    const minWithdraw = 10;
     if ((userData.balance || 0) < minWithdraw) {
-        showNotification(`Minimum withdrawal is ${minWithdraw} coins (10 Taka)`);
+        showNotification(`Minimum withdrawal is ${minWithdraw} GE ($5)`);
         return;
     }
     
@@ -1190,46 +1032,29 @@ function updateMiningUI() {
     const miningStatus = document.getElementById('miningStatus');
     const miningStatusFull = document.getElementById('miningStatusFull');
     
-    if (userData.miningDeposit >= 100) {
-        // User has deposited enough to mine
-        if (userData.miningActive) {
-            // Mining is active
-            miningToggle.textContent = 'Stop';
-            miningToggle.className = 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium transition-all';
-            miningToggleFull.textContent = 'Stop Mining';
-            miningToggleFull.className = 'bg-red-100 text-red-800 px-4 py-2 rounded-full text-sm font-medium transition-all';
-            miningVisual.classList.add('mining-active');
-            miningStatus.textContent = 'Active';
-            miningStatusFull.textContent = 'Status: Active';
-            
-            // Start mining timer if not already running
-            if (!miningInterval) {
-                startMining();
-            }
-        } else {
-            // Mining is inactive but can be started
-            miningToggle.textContent = 'Start';
-            miningToggle.className = 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium transition-all';
-            miningToggleFull.textContent = 'Start Mining';
-            miningToggleFull.className = 'bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium transition-all';
-            miningVisual.classList.remove('mining-active');
-            miningStatus.textContent = 'Ready';
-            miningStatusFull.textContent = 'Status: Ready';
-            
-            // Stop mining timer if running
-            if (miningInterval) {
-                stopMining();
-            }
+    if (userData.miningActive) {
+        // Mining is active
+        miningToggle.textContent = 'Stop';
+        miningToggle.className = 'bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium transition-all';
+        miningToggleFull.textContent = 'Stop Mining';
+        miningToggleFull.className = 'bg-red-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-all';
+        miningVisual.classList.add('mining-active');
+        miningStatus.textContent = 'Active';
+        miningStatusFull.textContent = 'Status: Active';
+        
+        // Start mining timer if not already running
+        if (!miningInterval) {
+            startMining();
         }
     } else {
-        // User hasn't deposited enough to mine
-        miningToggle.textContent = 'Deposit';
-        miningToggle.className = 'bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm font-medium transition-all';
-        miningToggleFull.textContent = 'Deposit';
-        miningToggleFull.className = 'bg-gray-200 text-gray-800 px-4 py-2 rounded-full text-sm font-medium transition-all';
+        // Mining is inactive but can be started
+        miningToggle.textContent = 'Start';
+        miningToggle.className = 'bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium transition-all';
+        miningToggleFull.textContent = 'Start Mining';
+        miningToggleFull.className = 'bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-all';
         miningVisual.classList.remove('mining-active');
-        miningStatus.textContent = 'Deposit 100+ coins';
-        miningStatusFull.textContent = 'Status: Deposit Required';
+        miningStatus.textContent = 'Ready';
+        miningStatusFull.textContent = 'Status: Ready';
         
         // Stop mining timer if running
         if (miningInterval) {
@@ -1238,26 +1063,22 @@ function updateMiningUI() {
     }
     
     // Update mining rate display
-    const miningRate = userData.miningRate || 5;
-    document.getElementById('miningRate').textContent = `${miningRate} coins/hr`;
-    document.getElementById('miningRateFull').textContent = `${miningRate} coins/hr`;
+    const miningRate = userData.miningRate || 0.000002;
+    document.getElementById('miningRate').textContent = `${miningRate} GE/s`;
+    document.getElementById('miningRateFull').textContent = `${miningRate} GE/s`;
     
     // Update total mined display
-    document.getElementById('totalMined').textContent = `${userData.miningEarnings || 0} coins`;
-    document.getElementById('totalMinedFull').textContent = `${userData.miningEarnings || 0} coins`;
-    document.getElementById('miningEarnings').textContent = `${userData.miningEarnings || 0} coins`;
-    
-    // Update mining power (based on deposit amount)
-    const miningPower = Math.min(Math.floor((userData.miningDeposit || 0) / 100) * 10, 100);
-    document.getElementById('miningPower').textContent = `${miningPower}%`;
+    document.getElementById('totalMined').textContent = `${(userData.miningEarnings || 0).toFixed(6)} GE`;
+    document.getElementById('totalMinedFull').textContent = `${(userData.miningEarnings || 0).toFixed(6)} GE`;
+    document.getElementById('miningEarnings').textContent = `${(userData.miningEarnings || 0).toFixed(6)} GE`;
     
     // Update profile mining status
     if (userData.miningActive) {
         document.getElementById('profileMiningStatus').textContent = 'Active';
-        document.getElementById('profileMiningStatus').className = 'font-medium text-green-600';
+        document.getElementById('profileMiningStatus').className = 'font-medium text-green-500';
     } else {
         document.getElementById('profileMiningStatus').textContent = 'Inactive';
-        document.getElementById('profileMiningStatus').className = 'font-medium text-gray-600';
+        document.getElementById('profileMiningStatus').className = 'font-medium text-gray-400';
     }
 }
 
@@ -1270,20 +1091,21 @@ function startMining() {
     miningSessionStart = Date.now();
     miningSessionSeconds = 0;
     miningProgress = 0;
+    miningEarnings = 0;
     
     // Update mining progress every second
     miningInterval = setInterval(() => {
         miningSessionSeconds++;
         
-        // Calculate progress (1 hour = 100%)
-        miningProgress = (miningSessionSeconds / 3600) * 100;
-        if (miningProgress > 100) miningProgress = 100;
+        // Calculate earnings based on mining rate (0.000002 GE per second)
+        const miningRate = userData.miningRate || 0.000002;
+        miningEarnings = miningSessionSeconds * miningRate;
         
         // Update UI
-        document.getElementById('miningProgressFill').style.width = `${miningProgress}%`;
-        document.getElementById('miningProgressText').textContent = `${Math.floor(miningProgress)}%`;
-        document.getElementById('miningProgressFillFull').style.width = `${miningProgress}%`;
-        document.getElementById('miningProgressTextFull').textContent = `${Math.floor(miningProgress)}%`;
+        document.getElementById('miningProgressFill').style.width = `${(miningSessionSeconds % 60) / 60 * 100}%`;
+        document.getElementById('miningProgressText').textContent = `${(miningSessionSeconds % 60)}s`;
+        document.getElementById('miningProgressFillFull').style.width = `${(miningSessionSeconds % 60) / 60 * 100}%`;
+        document.getElementById('miningProgressTextFull').textContent = `${(miningSessionSeconds % 60)}s`;
         
         // Format session time
         const hours = Math.floor(miningSessionSeconds / 3600);
@@ -1292,11 +1114,9 @@ function startMining() {
         document.getElementById('miningSessionTime').textContent = 
             `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         
-        // Check if we've completed an hour
-        if (miningSessionSeconds >= 3600) {
-            completeMiningCycle();
-            miningSessionSeconds = 0;
-            miningProgress = 0;
+        // Update balance every minute
+        if (miningSessionSeconds % 60 === 0) {
+            updateMiningBalance();
         }
     }, 1000);
     
@@ -1307,6 +1127,50 @@ function startMining() {
     });
 }
 
+// Update mining balance (called every minute)
+function updateMiningBalance() {
+    const miningRate = userData.miningRate || 0.000002;
+    const earnings = 60 * miningRate; // Earnings for 1 minute
+    
+    db.ref('users/' + currentUser).transaction(user => {
+        if (user) {
+            user.balance = (user.balance || 0) + earnings;
+            user.totalEarned = (user.totalEarned || 0) + earnings;
+            user.miningEarnings = (user.miningEarnings || 0) + earnings;
+            
+            // Record today's earnings
+            const todayEarnings = user.todayEarnings || {};
+            todayEarnings[`mining_${Date.now()}`] = {
+                amount: earnings,
+                timestamp: Date.now()
+            };
+            user.todayEarnings = todayEarnings;
+            
+            // Record mining history
+            const miningHistoryRef = db.ref(`miningHistory/${currentUser}`).push();
+            miningHistoryRef.set({
+                amount: earnings,
+                timestamp: Date.now(),
+                sessionDuration: 60
+            });
+            
+            // If referred, give bonus to referrer
+            if (user.referredBy) {
+                const referralBonus = earnings * 0.05; // 5% commission
+                db.ref('users/' + user.referredBy).transaction(referrer => {
+                    if (referrer) {
+                        referrer.balance = (referrer.balance || 0) + referralBonus;
+                        referrer.referralEarnings = (referrer.referralEarnings || 0) + referralBonus;
+                        referrer.totalEarned = (referrer.totalEarned || 0) + referralBonus;
+                    }
+                    return referrer;
+                });
+            }
+        }
+        return user;
+    });
+}
+
 // Stop mining process
 function stopMining() {
     if (miningInterval) {
@@ -1314,9 +1178,10 @@ function stopMining() {
         miningInterval = null;
         
         // Calculate partial earnings if any
-        if (miningSessionSeconds > 0) {
-            const miningRate = userData.miningRate || 5;
-            const partialEarnings = (miningSessionSeconds / 3600) * miningRate;
+        const partialSeconds = miningSessionSeconds % 60;
+        if (partialSeconds > 0) {
+            const miningRate = userData.miningRate || 0.000002;
+            const partialEarnings = partialSeconds * miningRate;
             
             if (partialEarnings > 0) {
                 db.ref('users/' + currentUser).transaction(user => {
@@ -1338,7 +1203,7 @@ function stopMining() {
                         miningHistoryRef.set({
                             amount: partialEarnings,
                             timestamp: Date.now(),
-                            sessionDuration: miningSessionSeconds
+                            sessionDuration: partialSeconds
                         });
                     }
                     return user;
@@ -1350,6 +1215,7 @@ function stopMining() {
         miningSessionStart = 0;
         miningSessionSeconds = 0;
         miningProgress = 0;
+        miningEarnings = 0;
         
         // Update database
         db.ref('users/' + currentUser).update({
@@ -1358,58 +1224,8 @@ function stopMining() {
     }
 }
 
-// Complete a full mining cycle (1 hour)
-function completeMiningCycle() {
-    const miningRate = userData.miningRate || 5;
-    
-    db.ref('users/' + currentUser).transaction(user => {
-        if (user) {
-            user.balance = (user.balance || 0) + miningRate;
-            user.totalEarned = (user.totalEarned || 0) + miningRate;
-            user.miningEarnings = (user.miningEarnings || 0) + miningRate;
-            
-            // Record today's earnings
-            const todayEarnings = user.todayEarnings || {};
-            todayEarnings[`mining_${Date.now()}`] = {
-                amount: miningRate,
-                timestamp: Date.now()
-            };
-            user.todayEarnings = todayEarnings;
-            
-            // Record mining history
-            const miningHistoryRef = db.ref(`miningHistory/${currentUser}`).push();
-            miningHistoryRef.set({
-                amount: miningRate,
-                timestamp: Date.now(),
-                sessionDuration: 3600
-            });
-            
-            // If referred, give bonus to referrer
-            if (user.referredBy) {
-                const referralBonus = Math.floor(miningRate * 0.05); // 5% commission
-                db.ref('users/' + user.referredBy).transaction(referrer => {
-                    if (referrer) {
-                        referrer.balance = (referrer.balance || 0) + referralBonus;
-                        referrer.referralEarnings = (referrer.referralEarnings || 0) + referralBonus;
-                        referrer.totalEarned = (referrer.totalEarned || 0) + referralBonus;
-                    }
-                    return referrer;
-                });
-            }
-        }
-        return user;
-    });
-    
-    showNotification(`Mining complete! You earned ${miningRate} coins.`);
-}
-
 // Toggle mining state
 function toggleMining() {
-    if (userData.miningDeposit < 100) {
-        showDepositModal();
-        return;
-    }
-    
     if (userData.miningActive) {
         stopMining();
     } else {
@@ -1440,10 +1256,10 @@ function loadTasks() {
             div.innerHTML = `
                 <div class="flex justify-between items-start mb-2">
                     <h4 class="font-bold text-lg">${task.title}</h4>
-                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">+${task.reward} Coins</span>
+                    <span class="bg-green-600 text-white text-xs px-2 py-1 rounded">+${task.reward} GE</span>
                 </div>
-                <p class="text-gray-600 text-sm mb-3">${task.description || 'Complete this task to earn coins'}</p>
-                ${task.link ? `<a href="${task.link}" target="_blank" class="text-blue-500 text-sm block mb-3"><i class="fas fa-external-link-alt mr-1"></i> Task Link</a>` : ''}
+                <p class="text-gray-400 text-sm mb-3">${task.description || 'Complete this task to earn GE coins'}</p>
+                ${task.link ? `<a href="${task.link}" target="_blank" class="text-blue-400 text-sm block mb-3"><i class="fas fa-external-link-alt mr-1"></i> Task Link</a>` : ''}
                 <button onclick="submitTask('${taskId}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium transition-all btn-press">
                     <i class="fas fa-check-circle mr-2"></i> Complete Task
                 </button>
@@ -1470,7 +1286,7 @@ function submitTask(taskId) {
             db.ref('tasks/' + taskId).once('value', taskSnap => {
                 const task = taskSnap.val();
                 if (task) {
-                    const referralBonus = Math.floor(task.reward * 0.05); // 5% commission
+                    const referralBonus = task.reward * 0.05; // 5% commission
                     db.ref('users/' + userData.referredBy).transaction(user => {
                         if (user) {
                             user.balance = (user.balance || 0) + referralBonus;
@@ -1554,11 +1370,11 @@ function loadTaskHistory() {
                 
                 let statusBadge = "";
                 if (submission.status === "approved") {
-                    statusBadge = `<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Approved</span>`;
+                    statusBadge = `<span class="bg-green-600 text-white text-xs px-2 py-1 rounded">Approved</span>`;
                 } else if (submission.status === "rejected") {
-                    statusBadge = `<span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Rejected</span>`;
+                    statusBadge = `<span class="bg-red-600 text-white text-xs px-2 py-1 rounded">Rejected</span>`;
                 } else {
-                    statusBadge = `<span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">Pending</span>`;
+                    statusBadge = `<span class="bg-yellow-600 text-white text-xs px-2 py-1 rounded">Pending</span>`;
                 }
                 
                 div.innerHTML = `
@@ -1566,9 +1382,9 @@ function loadTaskHistory() {
                         <h4 class="font-medium">${task.title}</h4>
                         ${statusBadge}
                     </div>
-                    <div class="flex justify-between text-sm text-gray-500">
+                    <div class="flex justify-between text-sm text-gray-400">
                         <p>${formatDate(submission.submittedAt)}</p>
-                        <p>+${task.reward || 0} Coins</p>
+                        <p>+${task.reward || 0} GE</p>
                     </div>
                 `;
                 container.appendChild(div);
@@ -1607,13 +1423,13 @@ function loadMiningHistory() {
             div.innerHTML = `
                 <div class="flex justify-between items-start mb-1">
                     <h4 class="font-medium">Mining Session</h4>
-                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Completed</span>
+                    <span class="bg-green-600 text-white text-xs px-2 py-1 rounded">Completed</span>
                 </div>
-                <div class="flex justify-between text-sm text-gray-500">
+                <div class="flex justify-between text-sm text-gray-400">
                     <p>${formatDate(item.timestamp)}</p>
-                    <p>+${item.amount || 0} Coins</p>
+                    <p>+${(item.amount || 0).toFixed(6)} GE</p>
                 </div>
-                <div class="text-xs text-gray-400 mt-1">Duration: ${duration}</div>
+                <div class="text-xs text-gray-500 mt-1">Duration: ${duration}</div>
             `;
             container.appendChild(div);
         });
@@ -1643,7 +1459,7 @@ function claimDaily() {
         }
         
         // Update user data
-        const reward = 10; // Daily reward amount
+        const reward = 0.1; // Daily reward amount (0.1 GE)
         db.ref('users/' + currentUser).transaction(user => {
             if (user) {
                 user.balance = (user.balance || 0) + reward;
@@ -1660,7 +1476,7 @@ function claimDaily() {
                 
                 // If referred, give bonus to referrer
                 if (user.referredBy) {
-                    const referralBonus = Math.floor(reward * 0.05); // 5% commission
+                    const referralBonus = reward * 0.05; // 5% commission
                     db.ref('users/' + user.referredBy).transaction(referrer => {
                         if (referrer) {
                             referrer.balance = (referrer.balance || 0) + referralBonus;
@@ -1673,65 +1489,27 @@ function claimDaily() {
             }
             return user;
         }).then(() => {
-            showNotification(`Daily reward of ${reward} coins claimed!`);
+            showNotification(`Daily reward of ${reward} GE claimed!`);
             dailyButton.innerHTML = `<i class="fas fa-check-circle mr-2"></i> Claimed Today`;
             
             // Re-enable button after 24 hours
             setTimeout(() => {
                 dailyButton.disabled = false;
-                dailyButton.innerHTML = `<i class="fas fa-gift mr-2"></i> Claim Daily Reward (10 Coins)`;
+                dailyButton.innerHTML = `<i class="fas fa-gift mr-2"></i> Claim Daily Reward (0.1 GE)`;
             }, 86400000);
         });
     });
 }
 
-// Submit deposit request
-function submitDeposit() {
-    const amount = parseInt(document.getElementById('depositAmount').value);
-    const method = document.getElementById('depositMethod').value;
-    const transactionId = document.getElementById('transactionId').value.trim();
-    const senderAccount = document.getElementById('senderAccount').value.trim();
-    const minDeposit = 100;
-    
-    if (!amount || amount < minDeposit) {
-        showNotification(`Minimum deposit is ${minDeposit} coins`);
-        return;
-    }
-    
-    if (!transactionId) {
-        showNotification("Please enter your transaction ID");
-        return;
-    }
-    
-    if (!senderAccount) {
-        showNotification("Please enter your account number");
-        return;
-    }
-    
-    const depositId = Date.now();
-    db.ref('deposits/' + depositId).set({
-        user: currentUser,
-        amount: amount,
-        method: method,
-        transactionId: transactionId,
-        senderAccount: senderAccount,
-        status: "pending",
-        requestedAt: Date.now()
-    }).then(() => {
-        showNotification(`Deposit request submitted for ${amount} coins. Please wait for approval.`);
-        hideDepositModal();
-    });
-}
-
 // Submit withdraw request
 function submitWithdraw() {
-    const amount = parseInt(document.getElementById('withdrawAmount').value);
+    const amount = parseFloat(document.getElementById('withdrawAmount').value);
     const method = document.getElementById('withdrawMethod').value;
     const account = document.getElementById('withdrawAccount').value.trim();
-    const minWithdraw = 100;
+    const minWithdraw = 10;
     
     if (!amount || amount < minWithdraw) {
-        showNotification(`Minimum withdrawal is ${minWithdraw} coins (10 Taka)`);
+        showNotification(`Minimum withdrawal is ${minWithdraw} GE ($5)`);
         return;
     }
     
@@ -1741,8 +1519,7 @@ function submitWithdraw() {
     }
     
     if (!account) {
-        const fieldName = (method === 'binance' || method === 'bitget') ? 'wallet address' : 'account number';
-        showNotification(`Please enter a valid ${fieldName}`);
+        showNotification("Please enter a valid wallet address");
         return;
     }
     
@@ -1761,60 +1538,9 @@ function submitWithdraw() {
             totalWithdrawn: (userData.totalWithdrawn || 0) + amount
         });
         
-        showNotification(`Withdrawal request submitted for ${amount} coins (${amount/10} Taka)`);
+        showNotification(`Withdrawal request submitted for ${amount} GE ($${(amount*0.5).toFixed(2)})`);
         hideWithdrawModal();
-        
-        // Open payment method URL if available
-        openPaymentMethod(method);
     });
-}
-
-// Copy payment number
-function copyPaymentNumber() {
-    const method = document.getElementById('depositMethod').value;
-    let number = '';
-    
-    switch(method) {
-        case 'nagad':
-            number = '017XXXXXXXX';
-            break;
-        case 'bkash':
-            number = '017XXXXXXXX';
-            break;
-        case 'rocket':
-            number = '017XXXXXXXX';
-            break;
-    }
-    
-    navigator.clipboard.writeText(number).then(() => {
-        showNotification("Payment number copied to clipboard!");
-    });
-}
-
-// Open payment method URL
-function openPaymentMethod(method) {
-    let url = '';
-    switch(method) {
-        case 'nagad':
-            url = 'https://nagad.com.bd';
-            break;
-        case 'bkash':
-            url = 'https://www.bkash.com';
-            break;
-        case 'rocket':
-            url = 'https://www.dutchbanglabank.com/rocket/rocket.html';
-            break;
-        case 'binance':
-            url = 'https://www.binance.com';
-            break;
-        case 'bitget':
-            url = 'https://www.bitget.com';
-            break;
-    }
-    
-    if (url) {
-        window.open(url, '_blank');
-    }
 }
 
 // Copy referral link
@@ -1838,17 +1564,6 @@ function showNotification(message) {
     }, 5000);
 }
 
-// Hide notification
-function hideNotification() {
-    document.getElementById('notificationBanner').classList.add('hidden');
-}
-
-// Toggle sidebar
-function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('open');
-    document.getElementById('overlay').classList.toggle('open');
-}
-
 // Show task section (main view)
 function showTaskSection() {
     document.getElementById('appContainer').classList.remove('hidden');
@@ -1856,7 +1571,12 @@ function showTaskSection() {
     document.getElementById('miningSection').classList.add('hidden');
     document.getElementById('profileSection').classList.add('hidden');
     document.getElementById('referralSection').classList.add('hidden');
-    toggleSidebar();
+    
+    // Update active nav item
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    document.querySelectorAll('.nav-item')[0].classList.add('active');
 }
 
 // Show history section
@@ -1867,7 +1587,12 @@ function showHistorySection() {
     document.getElementById('profileSection').classList.add('hidden');
     document.getElementById('referralSection').classList.add('hidden');
     loadTaskHistory();
-    toggleSidebar();
+    
+    // Update active nav item
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    document.querySelectorAll('.nav-item')[2].classList.add('active');
 }
 
 // Show mining section
@@ -1878,7 +1603,12 @@ function showMiningSection() {
     document.getElementById('profileSection').classList.add('hidden');
     document.getElementById('referralSection').classList.add('hidden');
     updateMiningSection();
-    toggleSidebar();
+    
+    // Update active nav item
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    document.querySelectorAll('.nav-item')[1].classList.add('active');
 }
 
 // Update mining section
@@ -1895,7 +1625,7 @@ function updateMiningSection() {
         }
     });
     
-    document.getElementById('todayMined').textContent = `${todayMined} coins`;
+    document.getElementById('todayMined').textContent = `${todayMined.toFixed(6)} GE`;
 }
 
 // Show profile section
@@ -1906,7 +1636,12 @@ function showProfileSection() {
     document.getElementById('miningSection').classList.add('hidden');
     document.getElementById('referralSection').classList.add('hidden');
     updateProfileSection();
-    toggleSidebar();
+    
+    // Update active nav item
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    document.querySelectorAll('.nav-item')[3].classList.add('active');
 }
 
 // Show referral section
@@ -1917,21 +1652,25 @@ function showReferralSection() {
     document.getElementById('miningSection').classList.add('hidden');
     document.getElementById('profileSection').classList.add('hidden');
     updateReferralSection();
-    toggleSidebar();
+    
+    // Update active nav item
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    document.querySelectorAll('.nav-item')[4].classList.add('active');
 }
 
 // Update profile section
 function updateProfileSection() {
     document.getElementById('profileUsername').textContent = currentUser;
-    document.getElementById('totalEarned').textContent = `${userData.totalEarned || 0} Coins`;
-    document.getElementById('totalWithdrawn').textContent = `${userData.totalWithdrawn || 0} Coins`;
-    document.getElementById('referralEarnings').textContent = `${userData.referralEarnings || 0} Coins`;
+    document.getElementById('totalEarned').textContent = `${(userData.totalEarned || 0).toFixed(6)} GE`;
+    document.getElementById('totalWithdrawn').textContent = `${(userData.totalWithdrawn || 0).toFixed(6)} GE`;
+    document.getElementById('referralEarnings').textContent = `${(userData.referralEarnings || 0).toFixed(6)} GE`;
     document.getElementById('referralCount').textContent = `${userData.referralCount || 0}`;
-    document.getElementById('miningEarnings').textContent = `${userData.miningEarnings || 0} Coins`;
+    document.getElementById('miningEarnings').textContent = `${(userData.miningEarnings || 0).toFixed(6)} GE`;
     
-    // Calculate mining power based on deposit amount
-    const miningPower = Math.min(Math.floor((userData.miningDeposit || 0) / 100) * 10, 100);
-    document.getElementById('miningPower').textContent = `${miningPower}%`;
+    // Mining power is always 100% now
+    document.getElementById('miningPower').textContent = `100%`;
     
     // Format join date
     if (userData.joinedAt) {
@@ -1942,26 +1681,26 @@ function updateProfileSection() {
     const statusElement = document.getElementById('accountStatus');
     if (userData.status === "banned") {
         statusElement.textContent = "Banned";
-        statusElement.className = "font-medium text-red-600";
+        statusElement.className = "font-medium text-red-500";
     } else {
         statusElement.textContent = "Active";
-        statusElement.className = "font-medium text-green-600";
+        statusElement.className = "font-medium text-green-500";
     }
     
     // Update mining status
     if (userData.miningActive) {
         document.getElementById('profileMiningStatus').textContent = "Active";
-        document.getElementById('profileMiningStatus').className = "font-medium text-green-600";
+        document.getElementById('profileMiningStatus').className = "font-medium text-green-500";
     } else {
         document.getElementById('profileMiningStatus').textContent = "Inactive";
-        document.getElementById('profileMiningStatus').className = "font-medium text-gray-600";
+        document.getElementById('profileMiningStatus').className = "font-medium text-gray-400";
     }
 }
 
 // Update referral section
 function updateReferralSection() {
     document.getElementById('sidebarReferralCount').textContent = userData.referralCount || 0;
-    document.getElementById('sidebarReferralEarnings').textContent = `${userData.referralEarnings || 0} Coins`;
+    document.getElementById('sidebarReferralEarnings').textContent = `${(userData.referralEarnings || 0).toFixed(6)} GE`;
 }
 
 // Format date
@@ -1983,6 +1722,81 @@ function formatRelativeDate(date) {
     if (days < 30) return `${Math.floor(days/7)} weeks ago`;
     if (days < 365) return `${Math.floor(days/30)} months ago`;
     return `${Math.floor(days/365)} years ago`;
+}
+
+// Load user data
+function loadUser() {
+    document.getElementById('loadingScreen').classList.add('hidden');
+    document.getElementById('appContainer').classList.remove('hidden');
+    showTaskSection();
+    
+    // Update UI with user data
+    document.getElementById('sidebarUsername').textContent = currentUser;
+    
+    // Set referral link
+    document.getElementById('referralLink').value = `https://example.com/earn?ref=${currentUser}`;
+    
+    // Listen for user data changes
+    db.ref('users/' + currentUser).on('value', snapshot => {
+        userData = snapshot.val() || {};
+        
+        // Check if user is banned
+        if (userData.status === "banned") {
+            document.getElementById('banScreen').classList.remove('hidden');
+            document.getElementById('appContainer').classList.add('hidden');
+            document.getElementById('historySection').classList.add('hidden');
+            document.getElementById('miningSection').classList.add('hidden');
+            document.getElementById('profileSection').classList.add('hidden');
+            document.getElementById('referralSection').classList.add('hidden');
+            return;
+        }
+        
+        // Update balance displays
+        document.getElementById('balanceDisplay').innerHTML = `
+            <i class="fas fa-coins mr-1"></i> ${(userData.balance || 0).toFixed(6)} GE
+        `;
+        document.getElementById('mainBalance').textContent = `${(userData.balance || 0).toFixed(6)} GE`;
+        document.getElementById('totalEarningsMini').textContent = `${(userData.totalEarned || 0).toFixed(6)} GE`;
+        
+        // Calculate today's earnings (since midnight)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayEarnings = userData.todayEarnings || {};
+        let todayTotal = 0;
+        
+        Object.keys(todayEarnings).forEach(key => {
+            if (todayEarnings[key].timestamp >= today.getTime()) {
+                todayTotal += todayEarnings[key].amount || 0;
+            }
+        });
+        
+        document.getElementById('todayEarnings').textContent = `${todayTotal.toFixed(6)} GE`;
+        
+        // Update mining status
+        updateMiningUI();
+        
+        // Update profile section if visible
+        if (!document.getElementById('profileSection').classList.contains('hidden')) {
+            updateProfileSection();
+        }
+        
+        // Update referral section if visible
+        if (!document.getElementById('referralSection').classList.contains('hidden')) {
+            updateReferralSection();
+        }
+        
+        // Update mining section if visible
+        if (!document.getElementById('miningSection').classList.contains('hidden')) {
+            updateMiningSection();
+        }
+    });
+    
+    loadTasks();
+    loadTaskHistory();
+    loadMiningHistory();
+    
+    // Auto approve pending tasks after 10 minutes
+    checkPendingTasks();
 }
 
 // Logout user
