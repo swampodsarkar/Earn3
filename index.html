@@ -24,6 +24,7 @@
         body {
             overflow: hidden;
             height: 100vh;
+            background-color: #f3f4f6;
         }
         
         /* Custom scrollbar */
@@ -55,9 +56,57 @@
             height: calc(100vh - 56px);
             overflow-y: auto;
         }
+        
+        /* Sidebar styles */
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar.open {
+            transform: translateX(0);
+        }
+        
+        /* Telegram-like header */
+        .tg-header {
+            background-color: #0088cc;
+            color: white;
+        }
+        
+        /* Telegram-like buttons */
+        .tg-button {
+            background-color: #0088cc;
+            color: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 500;
+        }
+        
+        .tg-button:hover {
+            background-color: #0077b3;
+        }
+        
+        /* Telegram-like cards */
+        .tg-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Overlay for sidebar */
+        .overlay {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
     </style>
 </head>
-<body class="bg-gray-100 font-sans relative h-screen overflow-hidden">
+<body class="font-sans relative h-screen overflow-hidden">
 
 <!-- Loading Screen -->
 <div id="loadingScreen" class="h-screen flex flex-col items-center justify-center text-lg font-bold bg-indigo-600 text-white">
@@ -68,20 +117,15 @@
 <!-- Main App Container -->
 <div id="appContainer" class="h-full flex flex-col hidden">
     <!-- Header -->
-    <div class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md">
-        <div>
-            <h2 id="displayName" class="font-bold text-lg flex items-center">
-                <i class="fas fa-user-circle mr-2"></i>
-                <span>User</span>
-            </h2>
-            <p id="balanceDisplay" class="text-sm opacity-90">
-                <i class="fas fa-coins mr-1"></i> Balance: 0 Coins
-            </p>
-        </div>
+    <div class="tg-header p-3 flex justify-between items-center">
+        <button onclick="toggleSidebar()" class="text-white p-2 rounded-full hover:bg-white hover:bg-opacity-10 transition-all btn-press">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h2 class="font-bold text-lg">TaskEarn</h2>
         <div class="flex items-center space-x-2">
-            <button onclick="showWithdrawModal()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg flex items-center transition-all btn-press">
-                <i class="fas fa-wallet mr-1"></i> Withdraw
-            </button>
+            <div id="balanceDisplay" class="text-sm bg-white bg-opacity-20 px-2 py-1 rounded-full">
+                <i class="fas fa-coins mr-1"></i> 0 Coins
+            </div>
         </div>
     </div>
 
@@ -96,57 +140,43 @@
     </div>
 
     <!-- Main Content - Fixed Height with Scroll -->
-    <div id="mainContent" class="fixed-section">
+    <div id="mainContent" class="fixed-section p-3 bg-gray-100">
         <!-- Balance Card -->
-        <div class="bg-white mx-4 mt-4 p-4 rounded-lg shadow-md transition-all hover:shadow-lg animate-fadeIn">
+        <div class="tg-card p-4 mb-3 transition-all animate-fadeIn">
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="text-gray-500 text-sm">Total Balance</h3>
                     <p id="mainBalance" class="text-2xl font-bold">0 Coins</p>
                     <p class="text-sm text-gray-500 mt-1">100 Coins = 10 Taka</p>
                 </div>
-                <div class="bg-indigo-100 p-3 rounded-full transition-all hover:bg-indigo-200">
-                    <i class="fas fa-coins text-indigo-600 text-xl"></i>
-                </div>
+                <button onclick="showWithdrawModal()" class="tg-button flex items-center">
+                    <i class="fas fa-wallet mr-2"></i> Withdraw
+                </button>
             </div>
         </div>
 
         <!-- Quick Stats -->
-        <div class="grid grid-cols-2 gap-3 mx-4 mt-4">
-            <div class="bg-white p-3 rounded-lg shadow-sm transition-all hover:shadow-md animate-fadeIn">
+        <div class="grid grid-cols-2 gap-3 mb-3">
+            <div class="tg-card p-3 transition-all animate-fadeIn">
                 <p class="text-gray-500 text-xs">Today's Earnings</p>
                 <p id="todayEarnings" class="font-bold">0 Coins</p>
             </div>
-            <div class="bg-white p-3 rounded-lg shadow-sm transition-all hover:shadow-md animate-fadeIn">
+            <div class="tg-card p-3 transition-all animate-fadeIn">
                 <p class="text-gray-500 text-xs">Total Earnings</p>
                 <p id="totalEarningsMini" class="font-bold">0 Coins</p>
             </div>
         </div>
 
-        <!-- Referral Section -->
-        <div class="mx-4 mt-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 rounded-lg shadow-md animate-fadeIn">
-            <h3 class="font-bold mb-2 flex items-center">
-                <i class="fas fa-user-plus mr-2"></i> Refer & Earn
-            </h3>
-            <p class="text-sm mb-3">Invite friends and earn 5% of their earnings!</p>
-            <div class="flex items-center bg-black bg-opacity-20 p-2 rounded">
-                <input type="text" id="referralLink" class="flex-1 bg-transparent border-none text-white" value="https://t.me/earnTo3_bot" readonly>
-                <button onclick="copyReferralLink()" class="ml-2 bg-white text-emerald-600 px-3 py-1 rounded text-sm font-bold transition-all hover:bg-gray-100 btn-press">
-                    <i class="fas fa-copy mr-1"></i> Copy
-                </button>
-            </div>
-        </div>
-
         <!-- Daily Reward Section -->
-        <div class="mx-4 mt-4 animate-fadeIn">
+        <div class="mb-3 animate-fadeIn">
             <button onclick="claimDaily()" id="dailyButton" class="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all btn-press">
                 <i class="fas fa-gift mr-2"></i> Claim Daily Reward (10 Coins)
             </button>
         </div>
 
         <!-- Task List -->
-        <div class="mx-4 mt-6 mb-4">
-            <h3 class="font-bold text-xl mb-3 flex items-center animate-fadeIn">
+        <div class="mb-4">
+            <h3 class="font-bold text-lg mb-3 flex items-center animate-fadeIn">
                 <i class="fas fa-tasks mr-2 text-indigo-600"></i> Available Tasks
             </h3>
             <div id="tasksContainer" class="space-y-3"></div>
@@ -159,21 +189,227 @@
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Fixed Bottom Nav -->
-    <div class="bg-white border-t border-gray-200 p-3 flex justify-around fixed bottom-0 left-0 right-0">
-        <button onclick="showTaskSection()" id="navTasks" class="flex flex-col items-center text-indigo-600 transition-all hover:scale-105 btn-press">
-            <i class="fas fa-tasks text-xl"></i>
-            <span class="text-xs mt-1">Tasks</span>
+<!-- Sidebar -->
+<div id="sidebar" class="sidebar fixed top-0 left-0 bottom-0 w-64 bg-white z-50 shadow-xl">
+    <!-- Sidebar Header -->
+    <div class="tg-header p-4 flex items-center justify-between">
+        <h3 class="font-bold text-white">Menu</h3>
+        <button onclick="toggleSidebar()" class="text-white p-1 rounded-full hover:bg-white hover:bg-opacity-10 transition-all btn-press">
+            <i class="fas fa-times"></i>
         </button>
-        <button onclick="showHistorySection()" id="navHistory" class="flex flex-col items-center text-gray-500 transition-all hover:scale-105 btn-press">
-            <i class="fas fa-history text-xl"></i>
-            <span class="text-xs mt-1">History</span>
+    </div>
+    
+    <!-- User Profile -->
+    <div class="p-4 flex items-center border-b border-gray-200">
+        <div class="bg-indigo-100 p-3 rounded-full mr-3">
+            <i class="fas fa-user text-indigo-600 text-xl"></i>
+        </div>
+        <div>
+            <h3 id="sidebarUsername" class="font-bold">Username</h3>
+            <p class="text-xs text-gray-500">@username</p>
+        </div>
+    </div>
+    
+    <!-- Sidebar Menu -->
+    <div class="py-2">
+        <button onclick="showTaskSection()" class="w-full text-left px-4 py-3 flex items-center hover:bg-gray-100 transition-all">
+            <i class="fas fa-tasks mr-3 text-indigo-600"></i> Tasks
         </button>
-        <button onclick="showProfileSection()" id="navProfile" class="flex flex-col items-center text-gray-500 transition-all hover:scale-105 btn-press">
-            <i class="fas fa-user text-xl"></i>
-            <span class="text-xs mt-1">Profile</span>
+        <button onclick="showHistorySection()" class="w-full text-left px-4 py-3 flex items-center hover:bg-gray-100 transition-all">
+            <i class="fas fa-history mr-3 text-indigo-600"></i> History
         </button>
+        <button onclick="showProfileSection()" class="w-full text-left px-4 py-3 flex items-center hover:bg-gray-100 transition-all">
+            <i class="fas fa-user mr-3 text-indigo-600"></i> Profile
+        </button>
+        <button onclick="showReferralSection()" class="w-full text-left px-4 py-3 flex items-center hover:bg-gray-100 transition-all">
+            <i class="fas fa-user-plus mr-3 text-indigo-600"></i> Refer & Earn
+        </button>
+        <button onclick="logoutUser()" class="w-full text-left px-4 py-3 flex items-center hover:bg-gray-100 transition-all text-red-500">
+            <i class="fas fa-sign-out-alt mr-3"></i> Logout
+        </button>
+    </div>
+</div>
+
+<!-- Overlay for sidebar -->
+<div id="overlay" class="overlay fixed inset-0 bg-black bg-opacity-50 z-40" onclick="toggleSidebar()"></div>
+
+<!-- History Section (Hidden by default) -->
+<div id="historySection" class="h-full flex flex-col hidden">
+    <div class="tg-header p-3 flex items-center shadow-md">
+        <button onclick="showTaskSection()" class="text-white p-2 rounded-full hover:bg-white hover:bg-opacity-10 transition-all btn-press mr-2">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h2 class="font-bold text-lg text-white">Task History</h2>
+    </div>
+    
+    <div class="fixed-section p-3 bg-gray-100">
+        <div id="historyContainer" class="space-y-3">
+            <!-- History items will be loaded here -->
+        </div>
+        
+        <!-- Empty State -->
+        <div id="emptyHistory" class="text-center py-8 text-gray-500 hidden">
+            <i class="fas fa-history text-4xl mb-3 opacity-30"></i>
+            <p>No task history yet</p>
+            <p class="text-sm mt-2">Complete tasks to see them here</p>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Section (Hidden by default) -->
+<div id="profileSection" class="h-full flex flex-col hidden">
+    <div class="tg-header p-3 flex items-center shadow-md">
+        <button onclick="showTaskSection()" class="text-white p-2 rounded-full hover:bg-white hover:bg-opacity-10 transition-all btn-press mr-2">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h2 class="font-bold text-lg text-white">My Profile</h2>
+    </div>
+    
+    <div class="fixed-section p-3 bg-gray-100">
+        <div class="tg-card p-4 mb-3 transition-all animate-fadeIn">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="bg-indigo-100 p-3 rounded-full transition-all hover:bg-indigo-200">
+                    <i class="fas fa-user text-indigo-600 text-2xl"></i>
+                </div>
+                <div>
+                    <h3 id="profileUsername" class="font-bold text-lg">@username</h3>
+                    <p id="joinDate" class="text-gray-600 text-sm">Joined 2 days ago</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
+                    <p class="text-gray-500 text-sm">Total Earned</p>
+                    <p id="totalEarned" class="font-bold">0 Coins</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
+                    <p class="text-gray-500 text-sm">Withdrawn</p>
+                    <p id="totalWithdrawn" class="font-bold">0 Coins</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
+                    <p class="text-gray-500 text-sm">Referral Earnings</p>
+                    <p id="referralEarnings" class="font-bold">0 Coins</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
+                    <p class="text-gray-500 text-sm">Referrals</p>
+                    <p id="referralCount" class="font-bold">0</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tg-card p-4 transition-all animate-fadeIn">
+            <h3 class="font-bold mb-3">Account Information</h3>
+            <div class="space-y-3">
+                <div>
+                    <p class="text-gray-500 text-sm">Status</p>
+                    <p id="accountStatus" class="font-medium text-green-600">Active</p>
+                </div>
+                <div>
+                    <p class="text-gray-500 text-sm">Balance Conversion</p>
+                    <p class="font-medium">100 Coins = 10 Taka</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Referral Section (Hidden by default) -->
+<div id="referralSection" class="h-full flex flex-col hidden">
+    <div class="tg-header p-3 flex items-center shadow-md">
+        <button onclick="showTaskSection()" class="text-white p-2 rounded-full hover:bg-white hover:bg-opacity-10 transition-all btn-press mr-2">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h2 class="font-bold text-lg text-white">Refer & Earn</h2>
+    </div>
+    
+    <div class="fixed-section p-3 bg-gray-100">
+        <div class="tg-card p-4 mb-3 transition-all animate-fadeIn">
+            <div class="flex items-center mb-3">
+                <div class="bg-green-100 p-3 rounded-full mr-3">
+                    <i class="fas fa-user-plus text-green-600 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold">Earn with Friends</h3>
+                    <p class="text-sm text-gray-600">Get 5% of your friends' earnings</p>
+                </div>
+            </div>
+            
+            <div class="bg-green-50 border border-green-100 rounded-lg p-3 mb-4">
+                <h4 class="font-bold text-green-800 mb-2">How it works</h4>
+                <ul class="text-sm text-green-700 space-y-2">
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle mt-1 mr-2 text-green-500"></i>
+                        <span>Share your referral link with friends</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle mt-1 mr-2 text-green-500"></i>
+                        <span>They sign up using your link</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle mt-1 mr-2 text-green-500"></i>
+                        <span>You earn 5% of all their earnings</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">Your Referral Link</label>
+                <div class="flex items-center bg-gray-100 p-2 rounded">
+                    <input type="text" id="referralLink" class="flex-1 bg-transparent border-none text-gray-800" value="https://t.me/earnTo3_bot" readonly>
+                    <button onclick="copyReferralLink()" class="ml-2 bg-indigo-600 text-white px-3 py-1 rounded text-sm font-bold transition-all hover:bg-indigo-700 btn-press">
+                        <i class="fas fa-copy mr-1"></i> Copy
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-gray-50 p-3 rounded-lg text-center">
+                    <p class="text-gray-500 text-sm">Total Referrals</p>
+                    <p id="sidebarReferralCount" class="font-bold text-lg">0</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg text-center">
+                    <p class="text-gray-500 text-sm">Earnings</p>
+                    <p id="sidebarReferralEarnings" class="font-bold text-lg">0 Coins</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tg-card p-4 transition-all animate-fadeIn">
+            <h3 class="font-bold mb-3">Referral Leaderboard</h3>
+            <div id="referralLeaderboard" class="space-y-3">
+                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                    <div class="flex items-center">
+                        <span class="font-bold mr-2">1.</span>
+                        <div class="bg-indigo-100 p-2 rounded-full mr-2">
+                            <i class="fas fa-user text-indigo-600"></i>
+                        </div>
+                        <span>top_referrer</span>
+                    </div>
+                    <span class="font-bold">50</span>
+                </div>
+                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                    <div class="flex items-center">
+                        <span class="font-bold mr-2">2.</span>
+                        <div class="bg-indigo-100 p-2 rounded-full mr-2">
+                            <i class="fas fa-user text-indigo-600"></i>
+                        </div>
+                        <span>second_referrer</span>
+                    </div>
+                    <span class="font-bold">30</span>
+                </div>
+                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                    <div class="flex items-center">
+                        <span class="font-bold mr-2">3.</span>
+                        <div class="bg-indigo-100 p-2 rounded-full mr-2">
+                            <i class="fas fa-user text-indigo-600"></i>
+                        </div>
+                        <span>third_referrer</span>
+                    </div>
+                    <span class="font-bold">20</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -210,322 +446,6 @@
     </div>
 </div>
 
-<!-- History Section (Hidden by default) -->
-<div id="historySection" class="h-full flex flex-col hidden">
-    <div class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md">
-        <button onclick="showTaskSection()" class="flex items-center transition-all hover:scale-105 btn-press">
-            <i class="fas fa-arrow-left mr-2"></i> Back
-        </button>
-        <h2 class="font-bold text-lg">Task History</h2>
-        <div class="w-6"></div> <!-- Spacer for alignment -->
-    </div>
-    
-    <div class="fixed-section p-4">
-        <div id="historyContainer" class="space-y-3">
-            <!-- History items will be loaded here -->
-        </div>
-        
-        <!-- Empty State -->
-        <div id="emptyHistory" class="text-center py-8 text-gray-500 hidden">
-            <i class="fas fa-history text-4xl mb-3 opacity-30"></i>
-            <p>No task history yet</p>
-            <p class="text-sm mt-2">Complete tasks to see them here</p>
-        </div>
-    </div>
-</div>
-
-<!-- Profile Section (Hidden by default) -->
-<div id="profileSection" class="h-full flex flex-col hidden">
-    <div class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md">
-        <button onclick="showTaskSection()" class="flex items-center transition-all hover:scale-105 btn-press">
-            <i class="fas fa-arrow-left mr-2"></i> Back
-        </button>
-        <h2 class="font-bold text-lg">My Profile</h2>
-        <div class="w-6"></div> <!-- Spacer for alignment -->
-    </div>
-    
-    <div class="fixed-section p-4">
-        <div class="bg-white rounded-lg shadow-md p-4 mb-4 transition-all hover:shadow-lg animate-fadeIn">
-            <div class="flex items-center space-x-4 mb-4">
-                <div class="bg-indigo-100 p-3 rounded-full transition-all hover:bg-indigo-200">
-                    <i class="fas fa-user text-indigo-600 text-2xl"></i>
-                </div>
-                <div>
-                    <h3 id="profileUsername" class="font-bold text-lg">@username</h3>
-                    <p id="joinDate" class="text-gray-600 text-sm">Joined 2 days ago</p>
-                </div>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
-                    <p class="text-gray-500 text-sm">Total Earned</p>
-                    <p id="totalEarned" class="font-bold">0 Coins</p>
-                </div>
-                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
-                    <p class="text-gray-500 text-sm">Withdrawn</p>
-                    <p id="totalWithdrawn" class="font-bold">0 Coins</p>
-                </div>
-                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
-                    <p class="text-gray-500 text-sm">Referral Earnings</p>
-                    <p id="referralEarnings" class="font-bold">0 Coins</p>
-                </div>
-                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
-                    <p class="text-gray-500 text-sm">Referrals</p>
-                    <p id="referralCount" class="font-bold">0</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow-md p-4 transition-all hover:shadow-lg animate-fadeIn">
-            <h3 class="font-bold mb-3">Account Information</h3>
-            <div class="space-y-3">
-                <div>
-                    <p class="text-gray-500 text-sm">Status</p>
-                    <p id="accountStatus" class="font-medium text-green-600">Active</p>
-                </div>
-                <div>
-                    <p class="text-gray-500 text-sm">Balance Conversion</p>
-                    <p class="font-medium">100 Coins = 10 Taka</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Logout Button -->
-        <div class="mt-6 mb-4">
-            <button onclick="logoutUser()" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-bold transition-all btn-press">
-                <i class="fas fa-sign-out-alt mr-2"></i> Logout
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Admin Panel (Hidden by default) -->
-<div id="adminPanel" class="h-full flex flex-col hidden">
-    <div class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md">
-        <button onclick="showTaskSection()" class="flex items-center transition-all hover:scale-105 btn-press">
-            <i class="fas fa-arrow-left mr-2"></i> Back
-        </button>
-        <h2 class="font-bold text-lg">Admin Panel</h2>
-        <div class="w-6"></div> <!-- Spacer for alignment -->
-    </div>
-    
-    <div class="fixed-section p-4">
-        <div class="bg-white rounded-lg shadow-md p-4 mb-4 transition-all hover:shadow-lg animate-fadeIn">
-            <h3 class="font-bold mb-3">Admin Actions</h3>
-            <div class="space-y-3">
-                <button onclick="showAddTaskModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-medium transition-all btn-press">
-                    <i class="fas fa-plus-circle mr-2"></i> Add New Task
-                </button>
-                <button onclick="showManageUsersModal()" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-medium transition-all btn-press">
-                    <i class="fas fa-users-cog mr-2"></i> Manage Users
-                </button>
-                <button onclick="showPendingSubmissions()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg font-medium transition-all btn-press">
-                    <i class="fas fa-tasks mr-2"></i> Pending Submissions
-                </button>
-                <button onclick="showWithdrawRequests()" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-lg font-medium transition-all btn-press">
-                    <i class="fas fa-money-bill-wave mr-2"></i> Withdraw Requests
-                </button>
-                <button onclick="showSendNoticeModal()" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg font-medium transition-all btn-press">
-                    <i class="fas fa-bullhorn mr-2"></i> Send Global Notice
-                </button>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow-md p-4 transition-all hover:shadow-lg animate-fadeIn">
-            <h3 class="font-bold mb-3">Quick Stats</h3>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
-                    <p class="text-gray-500 text-sm">Total Users</p>
-                    <p id="totalUsers" class="font-bold">0</p>
-                </div>
-                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
-                    <p class="text-gray-500 text-sm">Active Tasks</p>
-                    <p id="activeTasks" class="font-bold">0</p>
-                </div>
-                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
-                    <p class="text-gray-500 text-sm">Pending Submissions</p>
-                    <p id="pendingSubmissions" class="font-bold">0</p>
-                </div>
-                <div class="bg-gray-50 p-3 rounded-lg transition-all hover:bg-gray-100">
-                    <p class="text-gray-500 text-sm">Withdraw Requests</p>
-                    <p id="pendingWithdrawals" class="font-bold">0</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Task Modal -->
-<div id="addTaskModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md animate-fadeIn">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-xl">Add New Task</h3>
-            <button onclick="hideAddTaskModal()" class="text-gray-500 hover:text-gray-700 transition-all btn-press">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Task Title</label>
-            <input type="text" id="taskTitle" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter task title">
-        </div>
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Task Description</label>
-            <textarea id="taskDescription" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter task description"></textarea>
-        </div>
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Reward (Coins)</label>
-            <input type="number" id="taskReward" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter coin reward">
-        </div>
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Task Link (Optional)</label>
-            <input type="url" id="taskLink" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter task URL">
-        </div>
-        <div class="mb-4">
-            <label class="flex items-center">
-                <input type="checkbox" id="taskActive" class="rounded text-indigo-600 focus:ring-indigo-500" checked>
-                <span class="ml-2 text-gray-700">Active Task</span>
-            </label>
-        </div>
-        <button onclick="addNewTask()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold transition-all btn-press">
-            Add Task
-        </button>
-    </div>
-</div>
-
-<!-- Manage Users Modal -->
-<div id="manageUsersModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md animate-fadeIn">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-xl">Manage Users</h3>
-            <button onclick="hideManageUsersModal()" class="text-gray-500 hover:text-gray-700 transition-all btn-press">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Search User</label>
-            <input type="text" id="userSearch" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter username">
-        </div>
-        <div id="userSearchResults" class="max-h-60 overflow-y-auto mb-4 space-y-2 hidden">
-            <!-- Search results will appear here -->
-        </div>
-        <div id="selectedUserInfo" class="hidden mb-4 p-3 bg-gray-50 rounded-lg">
-            <h4 class="font-bold mb-2" id="selectedUsername"></h4>
-            <div class="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                    <p class="text-gray-500">Balance</p>
-                    <p id="selectedUserBalance"></p>
-                </div>
-                <div>
-                    <p class="text-gray-500">Status</p>
-                    <p id="selectedUserStatus"></p>
-                </div>
-                <div>
-                    <p class="text-gray-500">Joined</p>
-                    <p id="selectedUserJoined"></p>
-                </div>
-                <div>
-                    <p class="text-gray-500">Earned</p>
-                    <p id="selectedUserEarned"></p>
-                </div>
-            </div>
-            <div class="mt-3 flex space-x-2">
-                <button onclick="banSelectedUser()" id="banUserBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-1 rounded text-sm transition-all btn-press">
-                    Ban User
-                </button>
-                <button onclick="unbanSelectedUser()" id="unbanUserBtn" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-1 rounded text-sm transition-all btn-press hidden">
-                    Unban User
-                </button>
-                <button onclick="adjustUserBalance()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-1 rounded text-sm transition-all btn-press">
-                    Adjust Balance
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Pending Submissions Modal -->
-<div id="pendingSubmissionsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md animate-fadeIn">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-xl">Pending Submissions</h3>
-            <button onclick="hidePendingSubmissionsModal()" class="text-gray-500 hover:text-gray-700 transition-all btn-press">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div id="submissionsList" class="max-h-96 overflow-y-auto space-y-3">
-            <!-- Submissions will appear here -->
-        </div>
-    </div>
-</div>
-
-<!-- Withdraw Requests Modal -->
-<div id="withdrawRequestsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md animate-fadeIn">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-xl">Withdraw Requests</h3>
-            <button onclick="hideWithdrawRequestsModal()" class="text-gray-500 hover:text-gray-700 transition-all btn-press">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div id="withdrawRequestsList" class="max-h-96 overflow-y-auto space-y-3">
-            <!-- Withdraw requests will appear here -->
-        </div>
-    </div>
-</div>
-
-<!-- Send Notice Modal -->
-<div id="sendNoticeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md animate-fadeIn">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-xl">Send Global Notice</h3>
-            <button onclick="hideSendNoticeModal()" class="text-gray-500 hover:text-gray-700 transition-all btn-press">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Notice Message</label>
-            <textarea id="noticeMessage" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter your message"></textarea>
-        </div>
-        <button onclick="sendGlobalNotice()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold transition-all btn-press">
-            Send Notice
-        </button>
-    </div>
-</div>
-
-<!-- Adjust Balance Modal -->
-<div id="adjustBalanceModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md animate-fadeIn">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-xl">Adjust Balance</h3>
-            <button onclick="hideAdjustBalanceModal()" class="text-gray-500 hover:text-gray-700 transition-all btn-press">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Username</label>
-            <input type="text" id="adjustBalanceUsername" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" readonly>
-        </div>
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Action</label>
-            <select id="balanceAction" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
-                <option value="add">Add Coins</option>
-                <option value="subtract">Subtract Coins</option>
-                <option value="set">Set Exact Amount</option>
-            </select>
-        </div>
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Amount (Coins)</label>
-            <input type="number" id="balanceAmount" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter amount">
-        </div>
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Reason (Optional)</label>
-            <input type="text" id="balanceReason" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder="Enter reason">
-        </div>
-        <button onclick="processBalanceAdjustment()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold transition-all btn-press">
-            Confirm Adjustment
-        </button>
-    </div>
-</div>
-
 <!-- Firebase configuration -->
 <script>
 // Firebase configuration
@@ -551,8 +471,6 @@ tg.expand();
 let currentUser = null;
 let userData = {};
 let tgUserData = {};
-let selectedUser = null;
-let adminMode = false;
 
 // Initialize the app
 function initApp() {
@@ -665,16 +583,6 @@ function autoLoginFromTelegram() {
             }
         }
         
-        // Check if admin (username swampod321)
-        if (tgUserData.username === "swampod321") {
-            adminMode = true;
-            document.getElementById('navProfile').innerHTML = `
-                <i class="fas fa-user-shield text-xl"></i>
-                <span class="text-xs mt-1">Admin</span>
-            `;
-            document.getElementById('navProfile').onclick = showAdminPanel;
-        }
-        
         currentUser = tgUserData.username;
         localStorage.setItem('loggedUser', currentUser);
         loadUser();
@@ -689,6 +597,7 @@ function loadUser() {
     
     // Update UI with user data
     document.getElementById('displayName').textContent = tgUserData.first_name || currentUser;
+    document.getElementById('sidebarUsername').textContent = tgUserData.first_name || currentUser;
     
     // Set referral link
     document.getElementById('referralLink').value = `https://t.me/earnTo3_bot?start=ref_${currentUser}`;
@@ -699,7 +608,7 @@ function loadUser() {
         
         // Update balance displays
         document.getElementById('balanceDisplay').innerHTML = `
-            <i class="fas fa-coins mr-1"></i> Balance: ${userData.balance || 0} Coins
+            <i class="fas fa-coins mr-1"></i> ${userData.balance || 0} Coins
         `;
         document.getElementById('mainBalance').textContent = `${userData.balance || 0} Coins`;
         document.getElementById('totalEarningsMini').textContent = `${userData.totalEarned || 0} Coins`;
@@ -721,6 +630,11 @@ function loadUser() {
         // Update profile section if visible
         if (!document.getElementById('profileSection').classList.contains('hidden')) {
             updateProfileSection();
+        }
+        
+        // Update referral section if visible
+        if (!document.getElementById('referralSection').classList.contains('hidden')) {
+            updateReferralSection();
         }
     });
     
@@ -750,7 +664,7 @@ function loadTasks() {
         Object.keys(tasks).forEach(taskId => {
             const task = tasks[taskId];
             const div = document.createElement('div');
-            div.className = "bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-all animate-fadeIn";
+            div.className = "tg-card p-4 rounded-lg transition-all animate-fadeIn";
             div.innerHTML = `
                 <div class="flex justify-between items-start mb-2">
                     <h4 class="font-bold text-lg">${task.title}</h4>
@@ -865,7 +779,7 @@ function loadTaskHistory() {
                 const task = allTasks[submission.taskId] || { title: "Unknown Task", reward: 0 };
                 
                 const div = document.createElement('div');
-                div.className = "bg-white p-4 rounded-lg shadow-sm transition-all hover:shadow-md animate-fadeIn";
+                div.className = "tg-card p-4 rounded-lg transition-all animate-fadeIn";
                 
                 let statusBadge = "";
                 if (submission.status === "approved") {
@@ -1074,20 +988,19 @@ function hideNotification() {
     document.getElementById('notificationBanner').classList.add('hidden');
 }
 
+// Toggle sidebar
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('open');
+}
+
 // Show task section (main view)
 function showTaskSection() {
     document.getElementById('appContainer').classList.remove('hidden');
     document.getElementById('historySection').classList.add('hidden');
     document.getElementById('profileSection').classList.add('hidden');
-    document.getElementById('adminPanel').classList.add('hidden');
-    
-    // Update nav active state
-    document.getElementById('navTasks').classList.remove('text-gray-500');
-    document.getElementById('navTasks').classList.add('text-indigo-600');
-    document.getElementById('navHistory').classList.remove('text-indigo-600');
-    document.getElementById('navHistory').classList.add('text-gray-500');
-    document.getElementById('navProfile').classList.remove('text-indigo-600');
-    document.getElementById('navProfile').classList.add('text-gray-500');
+    document.getElementById('referralSection').classList.add('hidden');
+    toggleSidebar();
 }
 
 // Show history section
@@ -1095,16 +1008,9 @@ function showHistorySection() {
     document.getElementById('appContainer').classList.add('hidden');
     document.getElementById('historySection').classList.remove('hidden');
     document.getElementById('profileSection').classList.add('hidden');
-    document.getElementById('adminPanel').classList.add('hidden');
+    document.getElementById('referralSection').classList.add('hidden');
     loadTaskHistory();
-    
-    // Update nav active state
-    document.getElementById('navTasks').classList.remove('text-indigo-600');
-    document.getElementById('navTasks').classList.add('text-gray-500');
-    document.getElementById('navHistory').classList.remove('text-gray-500');
-    document.getElementById('navHistory').classList.add('text-indigo-600');
-    document.getElementById('navProfile').classList.remove('text-indigo-600');
-    document.getElementById('navProfile').classList.add('text-gray-500');
+    toggleSidebar();
 }
 
 // Show profile section
@@ -1112,497 +1018,19 @@ function showProfileSection() {
     document.getElementById('appContainer').classList.add('hidden');
     document.getElementById('profileSection').classList.remove('hidden');
     document.getElementById('historySection').classList.add('hidden');
-    document.getElementById('adminPanel').classList.add('hidden');
+    document.getElementById('referralSection').classList.add('hidden');
     updateProfileSection();
-    
-    // Update nav active state
-    document.getElementById('navTasks').classList.remove('text-indigo-600');
-    document.getElementById('navTasks').classList.add('text-gray-500');
-    document.getElementById('navHistory').classList.remove('text-indigo-600');
-    document.getElementById('navHistory').classList.add('text-gray-500');
-    document.getElementById('navProfile').classList.remove('text-gray-500');
-    document.getElementById('navProfile').classList.add('text-indigo-600');
+    toggleSidebar();
 }
 
-// Show admin panel
-function showAdminPanel() {
+// Show referral section
+function showReferralSection() {
     document.getElementById('appContainer').classList.add('hidden');
-    document.getElementById('profileSection').classList.add('hidden');
+    document.getElementById('referralSection').classList.remove('hidden');
     document.getElementById('historySection').classList.add('hidden');
-    document.getElementById('adminPanel').classList.remove('hidden');
-    
-    // Load admin stats
-    loadAdminStats();
-}
-
-// Load admin stats
-function loadAdminStats() {
-    // Total users
-    db.ref('users').once('value', snap => {
-        document.getElementById('totalUsers').textContent = snap.numChildren();
-    });
-    
-    // Active tasks
-    db.ref('tasks').orderByChild('active').equalTo(true).once('value', snap => {
-        document.getElementById('activeTasks').textContent = snap.numChildren();
-    });
-    
-    // Pending submissions
-    db.ref('submissions').orderByChild('status').equalTo('pending').once('value', snap => {
-        document.getElementById('pendingSubmissions').textContent = snap.numChildren();
-    });
-    
-    // Pending withdrawals
-    db.ref('withdrawals').orderByChild('status').equalTo('pending').once('value', snap => {
-        document.getElementById('pendingWithdrawals').textContent = snap.numChildren();
-    });
-}
-
-// Show add task modal
-function showAddTaskModal() {
-    document.getElementById('taskTitle').value = "";
-    document.getElementById('taskDescription').value = "";
-    document.getElementById('taskReward').value = "";
-    document.getElementById('taskLink').value = "";
-    document.getElementById('taskActive').checked = true;
-    document.getElementById('addTaskModal').classList.remove('hidden');
-}
-
-// Hide add task modal
-function hideAddTaskModal() {
-    document.getElementById('addTaskModal').classList.add('hidden');
-}
-
-// Add new task
-function addNewTask() {
-    const title = document.getElementById('taskTitle').value.trim();
-    const description = document.getElementById('taskDescription').value.trim();
-    const reward = parseInt(document.getElementById('taskReward').value);
-    const link = document.getElementById('taskLink').value.trim();
-    const active = document.getElementById('taskActive').checked;
-    
-    if (!title || !reward) {
-        showNotification("Please fill all required fields");
-        return;
-    }
-    
-    const taskId = Date.now();
-    db.ref('tasks/' + taskId).set({
-        title: title,
-        description: description,
-        reward: reward,
-        link: link,
-        active: active,
-        createdAt: Date.now()
-    }).then(() => {
-        showNotification("Task added successfully!");
-        hideAddTaskModal();
-    });
-}
-
-// Show manage users modal
-function showManageUsersModal() {
-    document.getElementById('userSearch').value = "";
-    document.getElementById('userSearchResults').innerHTML = "";
-    document.getElementById('userSearchResults').classList.add('hidden');
-    document.getElementById('selectedUserInfo').classList.add('hidden');
-    document.getElementById('manageUsersModal').classList.remove('hidden');
-    
-    // Add event listener for search
-    document.getElementById('userSearch').addEventListener('input', function() {
-        const searchTerm = this.value.trim().toLowerCase();
-        if (searchTerm.length < 3) {
-            document.getElementById('userSearchResults').innerHTML = "";
-            document.getElementById('userSearchResults').classList.add('hidden');
-            return;
-        }
-        
-        db.ref('users').once('value', snap => {
-            const users = snap.val() || {};
-            const results = [];
-            
-            Object.keys(users).forEach(username => {
-                if (username.toLowerCase().includes(searchTerm)) {
-                    results.push({
-                        username: username,
-                        data: users[username]
-                    });
-                }
-            });
-            
-            const resultsContainer = document.getElementById('userSearchResults');
-            resultsContainer.innerHTML = "";
-            
-            if (results.length === 0) {
-                resultsContainer.innerHTML = `<p class="text-gray-500 p-2">No users found</p>`;
-                resultsContainer.classList.remove('hidden');
-                return;
-            }
-            
-            results.forEach(user => {
-                const div = document.createElement('div');
-                div.className = "bg-gray-50 p-2 rounded cursor-pointer hover:bg-gray-100 transition-all";
-                div.innerHTML = `
-                    <p class="font-medium">${user.username}</p>
-                    <p class="text-xs text-gray-500">${user.data.firstName || ''} ${user.data.lastName || ''}</p>
-                `;
-                div.onclick = () => selectUser(user.username, user.data);
-                resultsContainer.appendChild(div);
-            });
-            
-            resultsContainer.classList.remove('hidden');
-        });
-    });
-}
-
-// Select user in manage users modal
-function selectUser(username, userData) {
-    selectedUser = username;
-    
-    document.getElementById('selectedUsername').textContent = username;
-    document.getElementById('selectedUserBalance').textContent = `${userData.balance || 0} Coins`;
-    document.getElementById('selectedUserStatus').textContent = userData.status === "banned" ? "Banned" : "Active";
-    document.getElementById('selectedUserJoined').textContent = formatDate(userData.joinedAt);
-    document.getElementById('selectedUserEarned').textContent = `${userData.totalEarned || 0} Coins`;
-    
-    if (userData.status === "banned") {
-        document.getElementById('banUserBtn').classList.add('hidden');
-        document.getElementById('unbanUserBtn').classList.remove('hidden');
-    } else {
-        document.getElementById('banUserBtn').classList.remove('hidden');
-        document.getElementById('unbanUserBtn').classList.add('hidden');
-    }
-    
-    document.getElementById('selectedUserInfo').classList.remove('hidden');
-}
-
-// Ban selected user
-function banSelectedUser() {
-    if (!selectedUser) return;
-    
-    if (confirm(`Are you sure you want to ban ${selectedUser}?`)) {
-        db.ref('users/' + selectedUser).update({
-            status: "banned"
-        }).then(() => {
-            showNotification(`User ${selectedUser} has been banned`);
-            document.getElementById('banUserBtn').classList.add('hidden');
-            document.getElementById('unbanUserBtn').classList.remove('hidden');
-            document.getElementById('selectedUserStatus').textContent = "Banned";
-        });
-    }
-}
-
-// Unban selected user
-function unbanSelectedUser() {
-    if (!selectedUser) return;
-    
-    if (confirm(`Are you sure you want to unban ${selectedUser}?`)) {
-        db.ref('users/' + selectedUser).update({
-            status: "active"
-        }).then(() => {
-            showNotification(`User ${selectedUser} has been unbanned`);
-            document.getElementById('banUserBtn').classList.remove('hidden');
-            document.getElementById('unbanUserBtn').classList.add('hidden');
-            document.getElementById('selectedUserStatus').textContent = "Active";
-        });
-    }
-}
-
-// Adjust user balance
-function adjustUserBalance() {
-    if (!selectedUser) return;
-    
-    document.getElementById('adjustBalanceUsername').value = selectedUser;
-    document.getElementById('balanceAmount').value = "";
-    document.getElementById('balanceReason').value = "";
-    document.getElementById('adjustBalanceModal').classList.remove('hidden');
-    hideManageUsersModal();
-}
-
-// Process balance adjustment
-function processBalanceAdjustment() {
-    const username = document.getElementById('adjustBalanceUsername').value;
-    const action = document.getElementById('balanceAction').value;
-    const amount = parseInt(document.getElementById('balanceAmount').value);
-    const reason = document.getElementById('balanceReason').value.trim();
-    
-    if (!amount || amount <= 0) {
-        showNotification("Please enter a valid amount");
-        return;
-    }
-    
-    db.ref('users/' + username).once('value', snap => {
-        const user = snap.val();
-        if (!user) {
-            showNotification("User not found");
-            return;
-        }
-        
-        let newBalance = user.balance || 0;
-        let adjustmentText = "";
-        
-        switch(action) {
-            case "add":
-                newBalance += amount;
-                adjustmentText = `Added ${amount} coins to ${username}`;
-                break;
-            case "subtract":
-                newBalance = Math.max(0, newBalance - amount);
-                adjustmentText = `Subtracted ${amount} coins from ${username}`;
-                break;
-            case "set":
-                newBalance = amount;
-                adjustmentText = `Set balance of ${username} to ${amount} coins`;
-                break;
-        }
-        
-        // Update user balance
-        db.ref('users/' + username).update({
-            balance: newBalance
-        }).then(() => {
-            // Record the adjustment
-            const adjustmentId = Date.now();
-            db.ref('balanceAdjustments/' + adjustmentId).set({
-                admin: currentUser,
-                user: username,
-                action: action,
-                amount: amount,
-                newBalance: newBalance,
-                reason: reason,
-                timestamp: Date.now()
-            });
-            
-            showNotification(adjustmentText);
-            hideAdjustBalanceModal();
-        });
-    });
-}
-
-// Hide adjust balance modal
-function hideAdjustBalanceModal() {
-    document.getElementById('adjustBalanceModal').classList.add('hidden');
-}
-
-// Hide manage users modal
-function hideManageUsersModal() {
-    document.getElementById('manageUsersModal').classList.add('hidden');
-}
-
-// Show pending submissions modal
-function showPendingSubmissions() {
-    document.getElementById('pendingSubmissionsModal').classList.remove('hidden');
-    
-    // Load pending submissions
-    db.ref('submissions').orderByChild('status').equalTo('pending').once('value', snap => {
-        const submissions = snap.val() || {};
-        const container = document.getElementById('submissionsList');
-        container.innerHTML = "";
-        
-        if (Object.keys(submissions).length === 0) {
-            container.innerHTML = `<p class="text-gray-500 text-center py-4">No pending submissions</p>`;
-            return;
-        }
-        
-        // Get all tasks
-        db.ref('tasks').once('value', taskSnap => {
-            const tasks = taskSnap.val() || {};
-            
-            Object.keys(submissions).forEach(subId => {
-                const submission = submissions[subId];
-                const task = tasks[submission.taskId] || { title: "Unknown Task", reward: 0 };
-                
-                const div = document.createElement('div');
-                div.className = "bg-white p-3 rounded-lg shadow-sm border border-gray-200";
-                div.innerHTML = `
-                    <div class="flex justify-between items-start mb-1">
-                        <div>
-                            <h4 class="font-medium">${task.title}</h4>
-                            <p class="text-xs text-gray-500">Submitted by: ${submission.username}</p>
-                        </div>
-                        <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">Pending</span>
-                    </div>
-                    <div class="flex justify-between text-sm text-gray-500 mb-2">
-                        <p>${formatDate(submission.submittedAt)}</p>
-                        <p>+${task.reward || 0} Coins</p>
-                    </div>
-                    <div class="flex space-x-2">
-                        <button onclick="approveSubmission('${subId}', '${submission.taskId}', '${submission.user}')" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-1 rounded text-sm transition-all btn-press">
-                            Approve
-                        </button>
-                        <button onclick="rejectSubmission('${subId}')" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-1 rounded text-sm transition-all btn-press">
-                            Reject
-                        </button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        });
-    });
-}
-
-// Approve submission
-function approveSubmission(submissionId, taskId, userId) {
-    db.ref('submissions/' + submissionId).update({
-        status: "approved",
-        approvedAt: Date.now(),
-        approvedBy: currentUser
-    }).then(() => {
-        // Add coins to user balance
-        db.ref('tasks/' + taskId).once('value', taskSnap => {
-            const task = taskSnap.val();
-            if (task) {
-                db.ref('users/' + userId).transaction(user => {
-                    if (user) {
-                        user.balance = (user.balance || 0) + task.reward;
-                        user.totalEarned = (user.totalEarned || 0) + task.reward;
-                        
-                        // Record today's earnings
-                        const todayEarnings = user.todayEarnings || {};
-                        todayEarnings[submissionId] = {
-                            amount: task.reward,
-                            timestamp: Date.now()
-                        };
-                        user.todayEarnings = todayEarnings;
-                    }
-                    return user;
-                });
-            }
-        });
-        
-        showNotification("Submission approved!");
-        showPendingSubmissions(); // Refresh the list
-    });
-}
-
-// Reject submission
-function rejectSubmission(submissionId) {
-    db.ref('submissions/' + submissionId).update({
-        status: "rejected",
-        rejectedAt: Date.now(),
-        rejectedBy: currentUser
-    }).then(() => {
-        showNotification("Submission rejected!");
-        showPendingSubmissions(); // Refresh the list
-    });
-}
-
-// Hide pending submissions modal
-function hidePendingSubmissionsModal() {
-    document.getElementById('pendingSubmissionsModal').classList.add('hidden');
-}
-
-// Show withdraw requests modal
-function showWithdrawRequests() {
-    document.getElementById('withdrawRequestsModal').classList.remove('hidden');
-    
-    // Load pending withdrawals
-    db.ref('withdrawals').orderByChild('status').equalTo('pending').once('value', snap => {
-        const withdrawals = snap.val() || {};
-        const container = document.getElementById('withdrawRequestsList');
-        container.innerHTML = "";
-        
-        if (Object.keys(withdrawals).length === 0) {
-            container.innerHTML = `<p class="text-gray-500 text-center py-4">No pending withdrawal requests</p>`;
-            return;
-        }
-        
-        Object.keys(withdrawals).reverse().forEach(withdrawId => {
-            const withdrawal = withdrawals[withdrawId];
-            
-            const div = document.createElement('div');
-            div.className = "bg-white p-3 rounded-lg shadow-sm border border-gray-200";
-            div.innerHTML = `
-                <div class="flex justify-between items-start mb-1">
-                    <div>
-                        <h4 class="font-medium">${withdrawal.user}</h4>
-                        <p class="text-xs text-gray-500">${formatDate(withdrawal.requestedAt)}</p>
-                    </div>
-                    <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">Pending</span>
-                </div>
-                <div class="flex justify-between text-sm text-gray-500 mb-2">
-                    <p>${withdrawal.method.toUpperCase()}: ${withdrawal.account}</p>
-                    <p class="font-bold">${withdrawal.amount} Coins (${withdrawal.amount/10} Taka)</p>
-                </div>
-                <div class="flex space-x-2">
-                    <button onclick="approveWithdrawal('${withdrawId}', '${withdrawal.user}', ${withdrawal.amount})" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-1 rounded text-sm transition-all btn-press">
-                        Approve
-                    </button>
-                    <button onclick="rejectWithdrawal('${withdrawId}', '${withdrawal.user}', ${withdrawal.amount})" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-1 rounded text-sm transition-all btn-press">
-                        Reject
-                    </button>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    });
-}
-
-// Approve withdrawal
-function approveWithdrawal(withdrawId, username, amount) {
-    db.ref('withdrawals/' + withdrawId).update({
-        status: "approved",
-        approvedAt: Date.now(),
-        approvedBy: currentUser
-    }).then(() => {
-        showNotification(`Withdrawal of ${amount} coins approved for ${username}`);
-        showWithdrawRequests(); // Refresh the list
-    });
-}
-
-// Reject withdrawal
-function rejectWithdrawal(withdrawId, username, amount) {
-    // Return coins to user balance
-    db.ref('users/' + username).transaction(user => {
-        if (user) {
-            user.balance = (user.balance || 0) + amount;
-            user.totalWithdrawn = (user.totalWithdrawn || 0) - amount;
-        }
-        return user;
-    }).then(() => {
-        db.ref('withdrawals/' + withdrawId).update({
-            status: "rejected",
-            rejectedAt: Date.now(),
-            rejectedBy: currentUser
-        }).then(() => {
-            showNotification(`Withdrawal of ${amount} coins rejected for ${username}`);
-            showWithdrawRequests(); // Refresh the list
-        });
-    });
-}
-
-// Hide withdraw requests modal
-function hideWithdrawRequestsModal() {
-    document.getElementById('withdrawRequestsModal').classList.add('hidden');
-}
-
-// Show send notice modal
-function showSendNoticeModal() {
-    document.getElementById('noticeMessage').value = "";
-    document.getElementById('sendNoticeModal').classList.remove('hidden');
-}
-
-// Hide send notice modal
-function hideSendNoticeModal() {
-    document.getElementById('sendNoticeModal').classList.add('hidden');
-}
-
-// Send global notice
-function sendGlobalNotice() {
-    const message = document.getElementById('noticeMessage').value.trim();
-    if (!message) {
-        showNotification("Please enter a message");
-        return;
-    }
-    
-    const noticeId = Date.now();
-    db.ref('notifications/' + noticeId).set({
-        message: message,
-        sentBy: currentUser,
-        timestamp: Date.now()
-    }).then(() => {
-        showNotification("Global notice sent to all users!");
-        hideSendNoticeModal();
-    });
+    document.getElementById('profileSection').classList.add('hidden');
+    updateReferralSection();
+    toggleSidebar();
 }
 
 // Update profile section
@@ -1627,6 +1055,12 @@ function updateProfileSection() {
         statusElement.textContent = "Active";
         statusElement.className = "font-medium text-green-600";
     }
+}
+
+// Update referral section
+function updateReferralSection() {
+    document.getElementById('sidebarReferralCount').textContent = userData.referralCount || 0;
+    document.getElementById('sidebarReferralEarnings').textContent = `${userData.referralEarnings || 0} Coins`;
 }
 
 // Format date
