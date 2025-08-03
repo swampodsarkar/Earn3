@@ -4,130 +4,566 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GE Coin Mining</title>
-    <!-- Use Tailwind CSS via npm (production recommended) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --mining-gradient: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8fafc;
+            overflow-x: hidden;
+        }
+        
         .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary-gradient);
         }
-        .loading-spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 3px solid white;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
+        
+        .mining-gradient-bg {
+            background: var(--mining-gradient);
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        
         .mining-animation {
-            animation: pulse 2s infinite;
+            animation: pulse 2s infinite, float 6s ease-in-out infinite;
         }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+        
+        .status-approved {
+            background-color: #d1fae5;
+            color: var(--success-color);
+        }
+        
+        .status-rejected {
+            background-color: #fee2e2;
+            color: var(--danger-color);
+        }
+        
+        .mining-avatar {
+            width: 150px;
+            height: 150px;
+            font-size: 60px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #d97706;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .card {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-link {
+            position: relative;
+            font-weight: 500;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #f59e0b;
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .coin-animation {
+            position: absolute;
+            opacity: 0;
+            animation: coin-float 4s linear forwards;
+        }
+        
+        @keyframes coin-float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .maintenance-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .progress-bar {
+            position: relative;
+            height: 10px;
+            width: 100%;
+            background-color: #e2e8f0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-bar-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: var(--mining-gradient);
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+        
+        .emoji-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 100;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        /* Mining animation container */
+        .mining-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+        
+        /* Mining elements */
+        .mining-element {
+            position: absolute;
+            font-size: 30px;
+            animation: mining-float 4s ease-in-out infinite;
+        }
+        
+        /* Different animation delays for each element */
+        .mining-element:nth-child(1) { animation-delay: 0s; }
+        .mining-element:nth-child(2) { animation-delay: 0.5s; }
+        .mining-element:nth-child(3) { animation-delay: 1s; }
+        .mining-element:nth-child(4) { animation-delay: 1.5s; }
+        
+        @keyframes mining-float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(10deg); }
+            50% { transform: translateY(-40px) rotate(0deg); }
+            75% { transform: translateY(-20px) rotate(-10deg); }
+        }
+        
+        /* Pulse animation for active mining */
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
-        .status-badge {
-            font-size: 0.7rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 9999px;
+
+        /* Responsive adjustments */
+        @media (max-width: 767.98px) {
+            .mining-avatar {
+                width: 120px;
+                height: 120px;
+                font-size: 50px;
+            }
+            
+            .display-4 {
+                font-size: 2.5rem;
+            }
+            
+            .hero-section h1 {
+                font-size: 2rem;
+            }
+            
+            .hero-section p {
+                font-size: 1rem;
+            }
+            
+            .navbar-brand span {
+                font-size: 1.1rem;
+            }
+            
+            .card-body {
+                padding: 1rem;
+            }
         }
-        .status-pending {
+
+        /* Enhanced buttons */
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+            font-weight: 500;
+        }
+        
+        .btn-warning {
+            background: var(--mining-gradient);
+            border: none;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            border: none;
+            font-weight: 500;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            border: none;
+            font-weight: 500;
+        }
+        
+        /* Improved form controls */
+        .form-control, .form-select {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 0.25rem rgba(139, 92, 246, 0.25);
+        }
+        
+        /* Better tables */
+        .table {
+            --bs-table-bg: transparent;
+        }
+        
+        .table th {
+            font-weight: 600;
+            color: #64748b;
+        }
+        
+        /* Improved toasts */
+        .toast {
+            border: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        /* Better input groups */
+        .input-group-text {
+            background-color: #f1f5f9;
+            border-color: #e2e8f0;
+        }
+        
+        /* Improved badges */
+        .badge {
+            font-weight: 500;
+            padding: 0.35em 0.65em;
+        }
+        
+        /* Better shadows */
+        .shadow-sm {
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        }
+        
+        /* Improved modal */
+        .modal-content {
+            border: none;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        /* Better navbar */
+        .navbar {
+            padding: 0.75rem 1rem;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+        }
+        
+        /* Improved footer */
+        footer {
+            padding: 2rem 0;
+        }
+        
+        footer a {
+            transition: opacity 0.2s;
+        }
+        
+        footer a:hover {
+            opacity: 0.8;
+            text-decoration: none;
+        }
+        
+        /* Better responsive behavior */
+        @media (max-width: 575.98px) {
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+            
+            .display-5 {
+                font-size: 1.75rem;
+            }
+            
+            .fs-4 {
+                font-size: 1.25rem !important;
+            }
+            
+            .section-padding {
+                padding: 2rem 0;
+            }
+        }
+
+        /* Global Notice */
+        .global-notice {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1100;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            max-width: 90%;
+            width: max-content;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { top: -100px; opacity: 0; }
+            to { top: 20px; opacity: 1; }
+        }
+
+        .global-notice i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .global-notice.success i { color: var(--success-color); }
+        .global-notice.error i { color: var(--danger-color); }
+        .global-notice.warning i { color: var(--warning-color); }
+        .global-notice.info i { color: var(--info-color); }
+
+        /* Task section styles */
+        .task-card {
+            border-left: 4px solid var(--success-color);
+            transition: all 0.3s ease;
+        }
+
+        .task-card.pending {
+            border-left-color: var(--warning-color);
+        }
+
+        .task-card.completed {
+            border-left-color: var(--success-color);
+        }
+
+        .task-card.rejected {
+            border-left-color: var(--danger-color);
+        }
+
+        .task-reward {
+            font-size: 0.9rem;
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .task-status {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .task-status-pending {
             background-color: #fef3c7;
             color: #d97706;
         }
-        .status-approved {
+
+        .task-status-completed {
             background-color: #d1fae5;
-            color: #059669;
+            color: var(--success-color);
         }
-        .status-rejected {
+
+        .task-status-rejected {
             background-color: #fee2e2;
-            color: #dc2626;
+            color: var(--danger-color);
         }
-        .animate-fadeIn {
-            animation: fadeIn 0.3s ease-in-out;
+
+        /* Tab navigation */
+        .nav-tabs .nav-link {
+            border: none;
+            color: #64748b;
+            font-weight: 500;
+            padding: 0.75rem 1.25rem;
+            position: relative;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        .nav-tabs .nav-link.active {
+            color: #6366f1;
+            background-color: transparent;
         }
-        .avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            background-color: #e2e8f0;
+
+        .nav-tabs .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #6366f1;
         }
-        .mining-avatar {
-            width: 200px;
-            height: 200px;
-            font-size: 80px;
-            margin: 0 auto;
-            background-color: #c7d2fe;
-            color: #4f46e5;
+
+        /* Verification badge */
+        .verification-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+            background-color: #dbeafe;
+            color: #3b82f6;
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-light">
+    <!-- Emoji Rain Container -->
+    <div id="emojiRain" class="emoji-rain"></div>
+    
+    <!-- Global Notice Container -->
+    <div id="globalNotice"></div>
+    
+    <!-- Maintenance Overlay (Hidden by default) -->
+    <div id="maintenanceOverlay" class="maintenance-overlay d-none">
+        <div class="bg-danger p-4 p-md-5 rounded-4 animate__animated animate__bounceIn">
+            <div class="display-4 mb-4">🚧</div>
+            <h2 class="display-5 fw-bold mb-2">Under Maintenance</h2>
+            <p class="fs-4 mb-4">We're currently performing scheduled maintenance. Please check back later.</p>
+            <div class="d-flex justify-content-center mb-4">
+                <div class="animate-spin" style="font-size: 2.5rem;">⏳</div>
+            </div>
+            <p class="text-white-50">Expected completion: <span id="maintenanceTime">2 hours</span></p>
+        </div>
+    </div>
+    
     <!-- Navigation Bar -->
-    <nav class="gradient-bg text-white shadow-lg" id="mainNav">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <i class="fas fa-coins text-yellow-300 text-2xl"></i>
-                <span class="font-bold text-xl">GE Coin Mining</span>
-            </div>
-            <div class="hidden md:flex space-x-6" id="navLinks">
-                <a href="#home" class="hover:text-yellow-300 transition"><i class="fas fa-home mr-1"></i> Home</a>
-                <a href="#features" class="hover:text-yellow-300 transition"><i class="fas fa-star mr-1"></i> Features</a>
-                <a href="#how-it-works" class="hover:text-yellow-300 transition"><i class="fas fa-question-circle mr-1"></i> How It Works</a>
-            </div>
-            <div class="flex space-x-4" id="authButtons">
-                <button onclick="showAuthModal('login')" class="bg-white hover:bg-gray-100 text-blue-600 px-4 py-2 rounded-lg font-bold transition-all">
-                    <i class="fas fa-sign-in-alt mr-2"></i> Login
-                </button>
-                <button onclick="showAuthModal('signup')" class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 px-4 py-2 rounded-lg font-bold transition-all">
-                    <i class="fas fa-user-plus mr-2"></i> Sign Up
-                </button>
+    <nav class="navbar navbar-expand-lg navbar-dark gradient-bg shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <i class="fas fa-coins text-warning me-2 fs-4"></i>
+                <span class="fw-bold">GE Coin Mining</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto" id="navLinks">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#home"><i class="fas fa-home me-1"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features"><i class="fas fa-star me-1"></i> Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#how-it-works"><i class="fas fa-question-circle me-1"></i> How It Works</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#testimonials"><i class="fas fa-comments me-1"></i> Testimonials</a>
+                    </li>
+                </ul>
+                <div class="d-flex" id="authButtons">
+                    <button onclick="showAuthModal('login')" class="btn btn-light text-primary me-2 fw-bold">
+                        <i class="fas fa-sign-in-alt me-2"></i> Login
+                    </button>
+                    <button onclick="showAuthModal('signup')" class="btn btn-warning text-white fw-bold">
+                        <i class="fas fa-user-plus me-2"></i> Sign Up
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
 
-    <!-- Maintenance Banner -->
-    <div id="maintenanceBanner" class="bg-red-600 text-white text-center py-2 hidden">
-        <i class="fas fa-exclamation-triangle mr-2"></i>
-        <span>This site is currently under maintenance. Please check back later.</span>
-    </div>
-
     <!-- Main Content - Home Page -->
     <div id="homeContent">
         <!-- Hero Section -->
-        <section id="home" class="mb-16">
-            <div class="container mx-auto px-4 py-8">
-                <div class="flex flex-col md:flex-row items-center">
-                    <div class="md:w-1/2 mb-10 md:mb-0">
-                        <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-6">Start Mining GE Coins Today</h1>
-                        <p class="text-xl text-gray-600 mb-8">Earn cryptocurrency effortlessly with our easy-to-use mining platform. No technical knowledge required!</p>
-                        <div class="flex space-x-4">
-                            <button onclick="showAuthModal('signup')" class="gradient-bg hover:opacity-90 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all">
-                                <i class="fas fa-user-plus mr-2"></i> Get Started
+        <section id="home" class="py-5 section-padding">
+            <div class="container py-4">
+                <div class="row align-items-center">
+                    <div class="col-md-6 mb-4 mb-md-0 animate__animated animate__fadeInLeft">
+                        <h1 class="display-4 fw-bold text-dark mb-4">Start Mining GE Coins Today! 🚀</h1>
+                        <p class="lead text-muted mb-4">Earn cryptocurrency effortlessly with our easy-to-use mining platform. No technical knowledge required! 💰</p>
+                        <div class="d-flex flex-column flex-sm-row gap-3">
+                            <button onclick="showAuthModal('signup')" class="btn btn-primary btn-lg text-white fw-bold shadow">
+                                <i class="fas fa-user-plus me-2"></i> Get Started
                             </button>
-                            <button onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-4 rounded-lg font-bold text-lg transition-all">
-                                <i class="fas fa-play-circle mr-2"></i> How It Works
+                            <button onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})" class="btn btn-outline-dark btn-lg fw-bold shadow">
+                                <i class="fas fa-play-circle me-2"></i> How It Works
                             </button>
                         </div>
+                        <div class="mt-4 d-flex align-items-center text-muted">
+                            <i class="fas fa-users me-2"></i>
+                            <span>Join <span id="userCount" class="fw-bold">10,000+</span> happy miners</span>
+                        </div>
                     </div>
-                    <div class="md:w-1/2 flex justify-center">
-                        <div class="mining-avatar">
-                            <i class="fas fa-digging"></i>
+                    <div class="col-md-6 text-center animate__animated animate__fadeInRight">
+                        <div class="mining-container">
+                            <div class="mining-element" style="top: 50px; left: 50px;">⛏️</div>
+                            <div class="mining-element" style="top: 30px; left: 100px;">💎</div>
+                            <div class="mining-element" style="top: 60px; left: 30px;">💰</div>
                         </div>
                     </div>
                 </div>
@@ -135,247 +571,290 @@
         </section>
 
         <!-- Features Section -->
-        <section id="features" class="mb-16">
-            <div class="container mx-auto px-4">
-                <div class="text-center mb-12">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-4">Why Choose GE Coin Mining?</h2>
-                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">Our platform offers the easiest way to earn cryptocurrency with minimal effort</p>
+        <section id="features" class="py-5 bg-light section-padding">
+            <div class="container py-4">
+                <div class="text-center mb-5 animate__animated animate__fadeIn">
+                    <h2 class="display-5 fw-bold text-dark mb-3">Why Choose GE Coin Mining? ✨</h2>
+                    <p class="lead text-muted mx-auto" style="max-width: 700px">Our platform offers the easiest way to earn cryptocurrency with minimal effort</p>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="bg-white rounded-xl shadow-md p-8 text-center">
-                        <div class="text-blue-500 mb-6">
-                            <i class="fas fa-bolt text-5xl"></i>
+                <div class="row g-4">
+                    <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.1s">
+                        <div class="card h-100 p-4 text-center">
+                            <div class="text-primary mb-4 display-4">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <h3 class="fw-bold fs-4 mb-3">Fast & Easy ⚡</h3>
+                            <p class="text-muted">Start mining with just one click. No complex setup required. Get started in under 60 seconds! ⏱️</p>
                         </div>
-                        <h3 class="font-bold text-xl mb-4">Fast & Easy</h3>
-                        <p class="text-gray-600">Start mining with just one click. No complex setup required.</p>
                     </div>
-                    <div class="bg-white rounded-xl shadow-md p-8 text-center">
-                        <div class="text-green-500 mb-6">
-                            <i class="fas fa-users text-5xl"></i>
+                    <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
+                        <div class="card h-100 p-4 text-center">
+                            <div class="text-success mb-4 display-4">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h3 class="fw-bold fs-4 mb-3">Referral Program 👥</h3>
+                            <p class="text-muted">Earn 10% of your referrals' mining rewards for life! Invite friends and build passive income. 💸</p>
                         </div>
-                        <h3 class="font-bold text-xl mb-4">Referral Program</h3>
-                        <p class="text-gray-600">Earn 10% of your referrals' mining rewards. Invite friends and earn more!</p>
                     </div>
-                    <div class="bg-white rounded-xl shadow-md p-8 text-center">
-                        <div class="text-purple-500 mb-6">
-                            <i class="fas fa-hand-holding-usd text-5xl"></i>
+                    <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.3s">
+                        <div class="card h-100 p-4 text-center">
+                            <div class="text-purple mb-4 display-4">
+                                <i class="fas fa-hand-holding-usd"></i>
+                            </div>
+                            <h3 class="fw-bold fs-4 mb-3">Instant Withdrawals 💳</h3>
+                            <p class="text-muted">Withdraw your earnings easily. Minimum withdrawal only $5. Get paid within 24 hours! 🚀</p>
                         </div>
-                        <h3 class="font-bold text-xl mb-4">Instant Withdrawals</h3>
-                        <p class="text-gray-600">Withdraw your earnings easily. Minimum withdrawal only $5.</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- How It Works Section -->
-        <section id="how-it-works" class="mb-16">
-            <div class="container mx-auto px-4">
-                <div class="text-center mb-12">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-4">How It Works</h2>
-                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">Start earning in just 3 simple steps</p>
+        <section id="how-it-works" class="py-5 section-padding">
+            <div class="container py-4">
+                <div class="text-center mb-5 animate__animated animate__fadeIn">
+                    <h2 class="display-5 fw-bold text-dark mb-3">How It Works 🤔</h2>
+                    <p class="lead text-muted mx-auto" style="max-width: 700px">Start earning in just 3 simple steps</p>
                 </div>
                 
-                <div class="bg-white rounded-xl shadow-md p-8">
-                    <div class="flex flex-col md:flex-row mb-8">
-                        <div class="md:w-1/3 mb-6 md:mb-0 flex items-start">
-                            <div class="bg-blue-100 text-blue-600 font-bold rounded-full w-12 h-12 flex items-center justify-center mr-4 text-xl">1</div>
-                            <div>
-                                <h3 class="font-bold text-xl mb-2">Create an Account</h3>
-                                <p class="text-gray-600">Sign up in less than a minute with just your email address</p>
+                <div class="card shadow animate__animated animate__fadeIn">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="row mb-4">
+                            <div class="col-md-4 mb-4 mb-md-0 animate__animated animate__fadeIn" style="animation-delay: 0.1s">
+                                <div class="d-flex align-items-start">
+                                    <div class="bg-primary bg-opacity-10 text-primary fw-bold rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">1</div>
+                                    <div>
+                                        <h3 class="fw-bold fs-4 mb-2">Create an Account 📝</h3>
+                                        <p class="text-muted">Sign up in less than a minute with just your email address</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-4 mb-md-0 animate__animated animate__fadeIn" style="animation-delay: 0.2s">
+                                <div class="d-flex align-items-start">
+                                    <div class="bg-success bg-opacity-10 text-success fw-bold rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">2</div>
+                                    <div>
+                                        <h3 class="fw-bold fs-4 mb-2">Start Mining ⛏️</h3>
+                                        <p class="text-muted">Click the "Start Mining" button to begin earning GE Coins automatically</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 animate__animated animate__fadeIn" style="animation-delay: 0.3s">
+                                <div class="d-flex align-items-start">
+                                    <div class="bg-purple bg-opacity-10 text-purple fw-bold rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">3</div>
+                                    <div>
+                                        <h3 class="fw-bold fs-4 mb-2">Withdraw Earnings 💰</h3>
+                                        <p class="text-muted">Cash out your earnings to your preferred payment method</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="md:w-1/3 mb-6 md:mb-0 flex items-start">
-                            <div class="bg-green-100 text-green-600 font-bold rounded-full w-12 h-12 flex items-center justify-center mr-4 text-xl">2</div>
-                            <div>
-                                <h3 class="font-bold text-xl mb-2">Start Mining</h3>
-                                <p class="text-gray-600">Click the "Start Mining" button to begin earning GE Coins</p>
-                            </div>
+                        
+                        <div class="text-center animate__animated animate__fadeInUp">
+                            <button onclick="showAuthModal('signup')" class="btn btn-primary btn-lg text-white fw-bold shadow">
+                                <i class="fas fa-user-plus me-2"></i> Start Mining Now
+                            </button>
                         </div>
-                        <div class="md:w-1/3 flex items-start">
-                            <div class="bg-purple-100 text-purple-600 font-bold rounded-full w-12 h-12 flex items-center justify-center mr-4 text-xl">3</div>
-                            <div>
-                                <h3 class="font-bold text-xl mb-2">Withdraw Earnings</h3>
-                                <p class="text-gray-600">Cash out your earnings to your preferred payment method</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="text-center">
-                        <button onclick="showAuthModal('signup')" class="gradient-bg hover:opacity-90 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all">
-                            <i class="fas fa-user-plus mr-2"></i> Start Mining Now
-                        </button>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Testimonials Section -->
-        <section id="testimonials" class="mb-16">
-            <div class="container mx-auto px-4">
-                <div class="text-center mb-12">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-4">What Our Users Say</h2>
-                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">Join thousands of happy miners earning with our platform</p>
+        <section id="testimonials" class="py-5 bg-white section-padding">
+            <div class="container py-4">
+                <div class="text-center mb-5 animate__animated animate__fadeIn">
+                    <h2 class="display-5 fw-bold text-dark mb-3">What Our Users Say 🗣️</h2>
+                    <p class="lead text-muted mx-auto" style="max-width: 700px">Join thousands of happy miners earning with our platform</p>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="bg-white rounded-xl shadow-md p-6">
-                        <div class="flex items-center mb-4">
-                            <div class="avatar mr-4">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold">John D.</h4>
-                                <div class="flex text-yellow-400">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
+                <div class="row g-4">
+                    <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.1s">
+                        <div class="card h-100 p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                    <i class="fas fa-user fs-4"></i>
+                                </div>
+                                <div>
+                                    <h4 class="fw-bold mb-0">John D. 👨‍💼</h4>
+                                    <div class="text-warning">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                    </div>
                                 </div>
                             </div>
+                            <p class="text-muted">"I've been using GE Coin Mining for 3 months and already made over $500. The withdrawals are fast and reliable! 💯"</p>
                         </div>
-                        <p class="text-gray-600">"I've been using GE Coin Mining for 3 months and already made over $500. The withdrawals are fast and reliable!"</p>
                     </div>
-                    <div class="bg-white rounded-xl shadow-md p-6">
-                        <div class="flex items-center mb-4">
-                            <div class="avatar mr-4">
-                                <i class="fas fa-user-tie"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold">Sarah M.</h4>
-                                <div class="flex text-yellow-400">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
+                    <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
+                        <div class="card h-100 p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                    <i class="fas fa-user-tie fs-4"></i>
+                                </div>
+                                <div>
+                                    <h4 class="fw-bold mb-0">Sarah M. 👩‍💻</h4>
+                                    <div class="text-warning">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                    </div>
                                 </div>
                             </div>
+                            <p class="text-muted">"The referral program is amazing! I earn passive income from my referrals while also mining myself. 🤑"</p>
                         </div>
-                        <p class="text-gray-600">"The referral program is amazing! I earn passive income from my referrals while also mining myself."</p>
                     </div>
-                    <div class="bg-white rounded-xl shadow-md p-6">
-                        <div class="flex items-center mb-4">
-                            <div class="avatar mr-4">
-                                <i class="fas fa-user-astronaut"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold">Robert T.</h4>
-                                <div class="flex text-yellow-400">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star-half-alt"></i>
+                    <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.3s">
+                        <div class="card h-100 p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                    <i class="fas fa-user-astronaut fs-4"></i>
+                                </div>
+                                <div>
+                                    <h4 class="fw-bold mb-0">Robert T. 👨‍🚀</h4>
+                                    <div class="text-warning">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star-half-alt"></i>
+                                    </div>
                                 </div>
                             </div>
+                            <p class="text-muted">"Super easy to use. I'm not tech-savvy but I was able to start mining in minutes. Great platform! 👍"</p>
                         </div>
-                        <p class="text-gray-600">"Super easy to use. I'm not tech-savvy but I was able to start mining in minutes. Great platform!"</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- CTA Section -->
-        <section class="gradient-bg text-white rounded-xl shadow-xl p-12 text-center mb-16">
-            <div class="container mx-auto px-4">
-                <h2 class="text-3xl font-bold mb-6">Ready to Start Earning?</h2>
-                <p class="text-xl mb-8 max-w-2xl mx-auto">Join thousands of users who are already mining GE Coins and earning real money</p>
-                <button onclick="showAuthModal('signup')" class="bg-white hover:bg-gray-100 text-blue-600 px-8 py-4 rounded-lg font-bold text-lg transition-all">
-                    <i class="fas fa-user-plus mr-2"></i> Sign Up Now - It's Free!
-                </button>
+        <section class="gradient-bg text-white rounded-4 shadow-lg p-4 p-md-5 my-5 mx-3 mx-md-0 animate__animated animate__fadeIn">
+            <div class="container py-4">
+                <h2 class="display-5 fw-bold text-center mb-4">Ready to Start Earning? 🚀</h2>
+                <p class="lead text-center mb-5 mx-auto" style="max-width: 600px">Join thousands of users who are already mining GE Coins and earning real money 💸</p>
+                <div class="text-center">
+                    <button onclick="showAuthModal('signup')" class="btn btn-light btn-lg text-primary fw-bold shadow">
+                        <i class="fas fa-user-plus me-2"></i> Sign Up Now - It's Free!
+                    </button>
+                </div>
+                <div class="d-flex justify-content-center gap-4 mt-4 flex-wrap">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        <span>Secure Platform</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-headset me-2"></i>
+                        <span>24/7 Support</span>
+                    </div>
+                </div>
             </div>
         </section>
     </div>
 
     <!-- Dashboard Content (Hidden by default) -->
-    <div id="dashboardContent" class="hidden">
-        <div class="container mx-auto px-4 py-8">
+    <div id="dashboardContent" class="d-none">
+        <div class="container py-4">
             <!-- Mining Section -->
-            <section id="mining" class="mb-12 py-8 bg-gray-50 rounded-xl">
-                <div class="text-center mb-8">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2"><i class="fas fa-digging mr-2"></i> GE Coin Mining</h2>
-                    <p class="text-gray-600">Start mining now and earn GE Coins automatically</p>
+            <section id="mining" class="py-5 bg-light rounded-4 mb-4">
+                <div class="text-center mb-4">
+                    <h2 class="display-5 fw-bold text-dark mb-2"><i class="fas fa-digging me-2"></i> GE Coin Mining ⛏️</h2>
+                    <p class="text-muted">Start mining now and earn GE Coins automatically</p>
                 </div>
                 
-                <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6 text-center">
-                    <div class="mb-6">
-                        <div class="relative">
+                <div class="card shadow mx-auto animate__animated animate__fadeIn" style="max-width: 500px">
+                    <div class="card-body p-4 text-center">
+                        <div class="mb-4 position-relative">
                             <div class="mining-avatar mining-animation">
                                 <i class="fas fa-coins"></i>
                             </div>
-                            <div class="absolute top-4 left-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm">
-                                <i class="fas fa-play mr-1"></i> Active
+                            <div class="position-absolute top-0 start-0 bg-success text-white px-3 py-1 rounded-pill small">
+                                <i class="fas fa-play me-1"></i> Active
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-4 mb-6">
-                        <div class="bg-gray-100 p-4 rounded-lg">
-                            <p class="text-gray-500 text-sm">Mining Rate</p>
-                            <p id="miningRate" class="font-bold text-lg">0.000002 GE/s</p>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <div class="bg-light p-3 rounded-3">
+                                    <p class="text-muted small">Mining Rate ⚡</p>
+                                    <p id="miningRate" class="fw-bold fs-5">0.000002 GE/s</p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-light p-3 rounded-3">
+                                    <p class="text-muted small">Current Balance 💰</p>
+                                    <p id="currentBalance" class="fw-bold fs-5">0 GE</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-gray-100 p-4 rounded-lg">
-                            <p class="text-gray-500 text-sm">Current Balance</p>
-                            <p id="currentBalance" class="font-bold text-lg">0 GE</p>
+                        
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>Mining Progress 📊</span>
+                                <span id="miningProgressText">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div id="miningProgressBar" class="progress-bar-fill" style="width: 0%"></div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <div class="flex justify-between text-sm text-gray-500 mb-1">
-                            <span>Mining Progress</span>
-                            <span id="miningProgressText">0%</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2.5">
-                            <div id="miningProgressBar" class="gradient-bg h-2.5 rounded-full" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-blue-50 p-3 rounded-lg">
-                            <p class="text-gray-500 text-sm">Today's Earnings</p>
-                            <p id="todayEarnings" class="font-bold">0 GE ($0.00)</p>
-                        </div>
-                        <div class="bg-green-50 p-3 rounded-lg">
-                            <p class="text-gray-500 text-sm">Total Earnings</p>
-                            <p id="totalEarnings" class="font-bold">0 GE ($0.00)</p>
+                        
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="bg-primary bg-opacity-10 p-3 rounded-3">
+                                    <p class="text-muted small">Today's Earnings 📅</p>
+                                    <p id="todayEarnings" class="fw-bold">0 GE ($0.00)</p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-success bg-opacity-10 p-3 rounded-3">
+                                    <p class="text-muted small">Total Earnings 💵</p>
+                                    <p id="totalEarnings" class="fw-bold">0 GE ($0.00)</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
             <!-- Profile Section -->
-            <section id="profile" class="mb-12">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6"><i class="fas fa-user mr-2"></i> My Profile</h2>
+            <section id="profile" class="py-4 mb-4">
+                <h2 class="display-5 fw-bold text-dark mb-4"><i class="fas fa-user me-2"></i> My Profile 👤</h2>
                 
-                <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-                    <div class="p-6">
-                        <div class="flex flex-col md:flex-row items-start">
-                            <div class="md:w-1/3 mb-6 md:mb-0 flex flex-col items-center">
-                                <div class="avatar text-4xl mb-4">
-                                    <i class="fas fa-user"></i>
+                <div class="card shadow mb-4 animate__animated animate__fadeIn">
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-md-4 mb-4 mb-md-0 text-center">
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                                    <i class="fas fa-user fs-2"></i>
                                 </div>
-                                <h3 id="profileUsername" class="font-bold text-xl"></h3>
+                                <h3 id="profileUsername" class="fw-bold fs-4 mb-0"></h3>
                                 <p id="profileStatus" class="status-badge status-approved mt-2">Active</p>
+                                <button onclick="showEmojiRain()" class="btn btn-link btn-sm text-primary mt-3">
+                                    <i class="fas fa-gift me-1"></i> Celebrate!
+                                </button>
                             </div>
-                            <div class="md:w-2/3">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <label class="block text-gray-500 mb-1">Email</label>
-                                        <p id="profileEmail" class="font-medium"></p>
+                            <div class="col-md-8">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted">Email 📧</label>
+                                        <p id="profileEmail" class="fw-medium"></p>
                                     </div>
-                                    <div>
-                                        <label class="block text-gray-500 mb-1">Joined Date</label>
-                                        <p id="profileJoined" class="font-medium"></p>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted">Joined Date 📅</label>
+                                        <p id="profileJoined" class="fw-medium"></p>
                                     </div>
-                                    <div>
-                                        <label class="block text-gray-500 mb-1">Last Active</label>
-                                        <p id="profileLastActive" class="font-medium"></p>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted">Last Active ⏱️</label>
+                                        <p id="profileLastActive" class="fw-medium"></p>
                                     </div>
-                                    <div>
-                                        <label class="block text-gray-500 mb-1">Referral Code</label>
-                                        <p id="profileReferralCode" class="font-medium"></p>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted">Referral Code 🔗</label>
+                                        <p id="profileReferralCode" class="fw-medium"></p>
                                     </div>
                                 </div>
                             </div>
@@ -383,229 +862,327 @@
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white rounded-xl shadow-md p-6">
-                        <h3 class="font-bold text-lg mb-4 flex items-center">
-                            <i class="fas fa-coins text-yellow-500 mr-2"></i> Balance
-                        </h3>
-                        <div class="space-y-3">
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Available:</span>
-                                <span id="profileBalance" class="font-bold">0 GE</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Total Earned:</span>
-                                <span id="profileTotalEarned" class="font-bold">0 GE</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Total Withdrawn:</span>
-                                <span id="profileTotalWithdrawn" class="font-bold">0 GE</span>
+                <div class="row g-4">
+                    <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.1s">
+                        <div class="card h-100">
+                            <div class="card-body p-4">
+                                <h3 class="fw-bold fs-5 mb-4 d-flex align-items-center">
+                                    <i class="fas fa-coins text-warning me-2"></i> Balance 💰
+                                </h3>
+                                <div class="d-flex flex-column gap-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Available:</span>
+                                        <span id="profileBalance" class="fw-bold">0 GE</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Total Earned:</span>
+                                        <span id="profileTotalEarned" class="fw-bold">0 GE</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Total Withdrawn:</span>
+                                        <span id="profileTotalWithdrawn" class="fw-bold">0 GE</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="bg-white rounded-xl shadow-md p-6">
-                        <h3 class="font-bold text-lg mb-4 flex items-center">
-                            <i class="fas fa-users text-green-500 mr-2"></i> Referral Stats
-                        </h3>
-                        <div class="space-y-3">
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Referrals:</span>
-                                <span id="profileReferrals" class="font-bold">0</span>
+                    <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
+                        <div class="card h-100">
+                            <div class="card-body p-4">
+                                <h3 class="fw-bold fs-5 mb-4 d-flex align-items-center">
+                                    <i class="fas fa-users text-success me-2"></i> Referral Stats 👥
+                                </h3>
+                                <div class="d-flex flex-column gap-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Referrals:</span>
+                                        <span id="profileReferrals" class="fw-bold">0</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Referral Earnings:</span>
+                                        <span id="profileReferralEarnings" class="fw-bold">0 GE</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Referral Link:</span>
+                                        <button onclick="copyReferralLink()" class="btn btn-link btn-sm text-primary p-0">
+                                            <i class="fas fa-copy"></i> Copy
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Referral Earnings:</span>
-                                <span id="profileReferralEarnings" class="font-bold">0 GE</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Referral Link:</span>
-                                <button onclick="copyReferralLink()" class="text-blue-600 hover:text-blue-800 text-sm">
-                                    <i class="fas fa-copy"></i> Copy
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.3s">
+                        <div class="card h-100">
+                            <div class="card-body p-4">
+                                <h3 class="fw-bold fs-5 mb-4 d-flex align-items-center">
+                                    <i class="fas fa-cog text-purple me-2"></i> Settings ⚙️
+                                </h3>
+                                <button onclick="showUpdatePasswordModal()" class="btn btn-light w-100 mb-2 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-key me-2"></i> Change Password
+                                </button>
+                                <button onclick="showUpdatePaymentModal()" class="btn btn-light w-100 mb-2 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-wallet me-2"></i> Payment Method
+                                </button>
+                                <button onclick="showSupportModal()" class="btn btn-light w-100 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-headset me-2"></i> Contact Support
                                 </button>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="bg-white rounded-xl shadow-md p-6">
-                        <h3 class="font-bold text-lg mb-4 flex items-center">
-                            <i class="fas fa-cog text-purple-500 mr-2"></i> Settings
-                        </h3>
-                        <button onclick="showUpdatePasswordModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-lg mb-2 transition-all">
-                            <i class="fas fa-key mr-2"></i> Change Password
-                        </button>
-                        <button onclick="showUpdatePaymentModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-lg transition-all">
-                            <i class="fas fa-wallet mr-2"></i> Payment Method
-                        </button>
+                </div>
+            </section>
+
+            <!-- Tasks Section -->
+            <section id="tasks" class="py-4 mb-4">
+                <h2 class="display-5 fw-bold text-dark mb-4"><i class="fas fa-tasks me-2"></i> Tasks 🏆</h2>
+                
+                <ul class="nav nav-tabs mb-4" id="tasksTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="available-tab" data-bs-toggle="tab" data-bs-target="#available" type="button" role="tab">Available Tasks</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab">Completed Tasks</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="tasksTabContent">
+                    <div class="tab-pane fade show active" id="available" role="tabpanel">
+                        <div class="row g-4" id="availableTasks">
+                            <div class="col-md-6 animate__animated animate__fadeInUp">
+                                <div class="card task-card pending h-100">
+                                    <div class="card-body p-4">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <h3 class="fw-bold fs-5 mb-0">Follow on Telegram</h3>
+                                            <span class="task-reward">+5 GE</span>
+                                        </div>
+                                        <p class="text-muted mb-3">Follow our official Telegram channel to get updates and bonuses</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="task-status task-status-pending">Pending Verification</span>
+                                            <button onclick="completeTask('telegram')" class="btn btn-sm btn-primary">Complete Task</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 animate__animated animate__fadeInUp">
+                                <div class="card task-card pending h-100">
+                                    <div class="card-body p-4">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <h3 class="fw-bold fs-5 mb-0">Join Facebook Group</h3>
+                                            <span class="task-reward">+5 GE</span>
+                                        </div>
+                                        <p class="text-muted mb-3">Join our Facebook community and stay updated with latest news</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="task-status task-status-pending">Pending Verification</span>
+                                            <button onclick="completeTask('facebook')" class="btn btn-sm btn-primary">Complete Task</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="completed" role="tabpanel">
+                        <div class="row g-4" id="completedTasks">
+                            <div class="col-12">
+                                <p class="text-muted text-center py-4">No completed tasks yet</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
             <!-- Referral Section -->
-            <section id="refer" class="mb-12">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6"><i class="fas fa-users mr-2"></i> Referral Program</h2>
+            <section id="refer" class="py-4 mb-4">
+                <h2 class="display-5 fw-bold text-dark mb-4"><i class="fas fa-users me-2"></i> Referral Program 👥</h2>
                 
-                <div class="bg-white rounded-xl shadow-md p-6 mb-6">
-                    <div class="flex flex-col md:flex-row items-center">
-                        <div class="md:w-1/2 mb-6 md:mb-0">
-                            <h3 class="text-xl font-bold text-gray-800 mb-2">Invite Friends & Earn 10%</h3>
-                            <p class="text-gray-600 mb-4">Share your referral link and earn 10% of your friends' mining rewards for life!</p>
-                            
-                            <div class="mb-4">
-                                <label class="block text-gray-700 mb-2 font-medium">Your Referral Link</label>
-                                <div class="flex">
-                                    <input type="text" id="referralLink" class="flex-1 p-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" readonly>
-                                    <button onclick="copyReferralLink()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 rounded-r-lg">
-                                        <i class="fas fa-copy"></i>
+                <div class="card shadow mb-4 animate__animated animate__fadeIn">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-6 mb-4 mb-md-0">
+                                <h3 class="fw-bold fs-4 mb-3">Invite Friends & Earn 10% 💸</h3>
+                                <p class="text-muted mb-4">Share your referral link and earn 10% of your friends' mining rewards for life! 💰</p>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Your Referral Link 🔗</label>
+                                    <div class="input-group">
+                                        <input type="text" id="referralLink" class="form-control" readonly>
+                                        <button onclick="copyReferralLink()" class="btn btn-primary">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button onclick="shareOnFacebook()" class="btn btn-primary d-flex align-items-center">
+                                        <i class="fab fa-facebook-f me-2"></i> Share
+                                    </button>
+                                    <button onclick="shareOnWhatsApp()" class="btn btn-success d-flex align-items-center">
+                                        <i class="fab fa-whatsapp me-2"></i> Share
+                                    </button>
+                                    <button onclick="shareOnTwitter()" class="btn btn-info text-white d-flex align-items-center">
+                                        <i class="fab fa-twitter me-2"></i> Tweet
                                     </button>
                                 </div>
                             </div>
-                            
-                            <div class="flex space-x-2">
-                                <button onclick="shareOnFacebook()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                                    <i class="fab fa-facebook-f mr-1"></i> Share
-                                </button>
-                                <button onclick="shareOnWhatsApp()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
-                                    <i class="fab fa-whatsapp mr-1"></i> Share
-                                </button>
-                            </div>
-                        </div>
-                        <div class="md:w-1/2 flex justify-center">
-                            <div class="bg-blue-50 p-6 rounded-lg">
-                                <div class="text-center mb-4">
-                                    <i class="fas fa-gift text-4xl text-blue-500 mb-2"></i>
-                                    <h4 class="font-bold">Referral Bonus</h4>
-                                </div>
-                                <div class="text-center">
-                                    <p class="text-3xl font-bold text-blue-600 mb-1">10%</p>
-                                    <p class="text-gray-600">of your referrals' earnings</p>
+                            <div class="col-md-6 text-center">
+                                <div class="bg-primary bg-opacity-10 p-4 rounded-3 border border-primary border-opacity-25 animate__animated animate__pulse animate__infinite">
+                                    <div class="text-center mb-3">
+                                        <i class="fas fa-gift display-4 text-primary mb-2 animate__animated animate__bounce animate__infinite"></i>
+                                        <h4 class="fw-bold">Referral Bonus 🎁</h4>
+                                    </div>
+                                    <div class="text-center">
+                                        <p class="display-5 fw-bold text-primary mb-1">10%</p>
+                                        <p class="text-muted">of your referrals' earnings</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="bg-white rounded-xl shadow-md p-6">
-                    <h3 class="font-bold text-lg mb-4 flex items-center">
-                        <i class="fas fa-user-friends text-green-500 mr-2"></i> Your Referrals
-                    </h3>
-                    
-                    <div id="referralStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-gray-100 p-4 rounded-lg text-center">
-                            <p class="text-gray-500 text-sm">Total Referrals</p>
-                            <p id="totalReferrals" class="font-bold text-xl">0</p>
+                <div class="card shadow animate__animated animate__fadeIn">
+                    <div class="card-body p-4">
+                        <h3 class="fw-bold fs-5 mb-4 d-flex align-items-center">
+                            <i class="fas fa-user-friends text-success me-2"></i> Your Referrals 👥
+                        </h3>
+                        
+                        <div id="referralStats" class="row g-3 mb-4">
+                            <div class="col-6 col-md-3 animate__animated animate__fadeInUp" style="animation-delay: 0.1s">
+                                <div class="bg-light p-3 rounded-3 text-center">
+                                    <p class="text-muted small">Total Referrals</p>
+                                    <p id="totalReferrals" class="fw-bold fs-3">0</p>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3 animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
+                                <div class="bg-light p-3 rounded-3 text-center">
+                                    <p class="text-muted small">Active Referrals</p>
+                                    <p id="activeReferrals" class="fw-bold fs-3">0</p>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3 animate__animated animate__fadeInUp" style="animation-delay: 0.3s">
+                                <div class="bg-light p-3 rounded-3 text-center">
+                                    <p class="text-muted small">Referral Earnings</p>
+                                    <p id="totalReferralEarnings" class="fw-bold fs-3">0 GE</p>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3 animate__animated animate__fadeInUp" style="animation-delay: 0.4s">
+                                <div class="bg-light p-3 rounded-3 text-center">
+                                    <p class="text-muted small">Last Referral</p>
+                                    <p id="lastReferral" class="fw-bold">None</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-gray-100 p-4 rounded-lg text-center">
-                            <p class="text-gray-500 text-sm">Active Referrals</p>
-                            <p id="activeReferrals" class="font-bold text-xl">0</p>
+                        
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr class="border-top">
+                                        <th class="text-start">Username 👤</th>
+                                        <th class="text-start">Joined 📅</th>
+                                        <th class="text-start">Status 🚦</th>
+                                        <th class="text-start">Earned 💰</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="referralList">
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">No referrals yet</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="bg-gray-100 p-4 rounded-lg text-center">
-                            <p class="text-gray-500 text-sm">Referral Earnings</p>
-                            <p id="totalReferralEarnings" class="font-bold text-xl">0 GE</p>
-                        </div>
-                        <div class="bg-gray-100 p-4 rounded-lg text-center">
-                            <p class="text-gray-500 text-sm">Last Referral</p>
-                            <p id="lastReferral" class="font-bold">None</p>
-                        </div>
-                    </div>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-white">
-                            <thead>
-                                <tr class="border-b">
-                                    <th class="py-3 px-4 text-left">Username</th>
-                                    <th class="py-3 px-4 text-left">Joined</th>
-                                    <th class="py-3 px-4 text-left">Status</th>
-                                    <th class="py-3 px-4 text-left">Earned</th>
-                                </tr>
-                            </thead>
-                            <tbody id="referralList">
-                                <tr>
-                                    <td colspan="4" class="py-4 text-center text-gray-500">No referrals yet</td>
-                                </tr>
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </section>
 
             <!-- Withdraw Section -->
-            <section id="withdraw" class="mb-12">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6"><i class="fas fa-money-bill-wave mr-2"></i> Withdraw Earnings</h2>
+            <section id="withdraw" class="py-4 mb-4">
+                <h2 class="display-5 fw-bold text-dark mb-4"><i class="fas fa-money-bill-wave me-2"></i> Withdraw Earnings 💸</h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div class="bg-white rounded-xl shadow-md p-6">
-                        <h3 class="font-bold text-lg mb-4 flex items-center">
-                            <i class="fas fa-wallet text-green-500 mr-2"></i> Balance
-                        </h3>
-                        <div class="space-y-3">
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Available:</span>
-                                <span id="withdrawBalance" class="font-bold">0 GE ($0.00)</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Minimum Withdrawal:</span>
-                                <span class="font-bold">10 GE ($5.00)</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Withdrawal Fee:</span>
-                                <span class="font-bold">5%</span>
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.1s">
+                        <div class="card h-100">
+                            <div class="card-body p-4">
+                                <h3 class="fw-bold fs-5 mb-4 d-flex align-items-center">
+                                    <i class="fas fa-wallet text-success me-2"></i> Balance 💰
+                                </h3>
+                                <div class="d-flex flex-column gap-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Available:</span>
+                                        <span id="withdrawBalance" class="fw-bold">0 GE ($0.00)</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Minimum Withdrawal:</span>
+                                        <span class="fw-bold">10 GE ($5.00)</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Withdrawal Fee:</span>
+                                        <span class="fw-bold">5%</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="bg-white rounded-xl shadow-md p-6 md:col-span-2">
-                        <h3 class="font-bold text-lg mb-4 flex items-center">
-                            <i class="fas fa-coins text-yellow-500 mr-2"></i> Request Withdrawal
-                        </h3>
-                        
-                        <div class="mb-4">
-                            <label class="block text-gray-700 mb-2 font-medium">Payment Method</label>
-                            <select id="withdrawMethod" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="bkash">bKash</option>
-                                <option value="nagad">Nagad</option>
-                                <option value="rocket">Rocket</option>
-                            </select>
+                    <div class="col-md-8 animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
+                        <div class="card h-100">
+                            <div class="card-body p-4">
+                                <h3 class="fw-bold fs-5 mb-4 d-flex align-items-center">
+                                    <i class="fas fa-coins text-warning me-2"></i> Request Withdrawal 💳
+                                </h3>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Payment Method 💰</label>
+                                    <select id="withdrawMethod" class="form-select">
+                                        <option value="bkash">bKash</option>
+                                        <option value="nagad">Nagad</option>
+                                        <option value="rocket">Rocket</option>
+                                        <option value="paypal">PayPal</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Account Number 🔢</label>
+                                    <input type="text" id="withdrawAccount" class="form-control" placeholder="Enter your account number">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Amount (GE) 💵</label>
+                                    <input type="number" id="withdrawAmount" class="form-control" placeholder="Enter amount to withdraw">
+                                    <div class="form-text">Minimum: 10 GE ($5.00)</div>
+                                </div>
+                                
+                                <button onclick="requestWithdrawal()" id="withdrawBtn" class="btn btn-primary w-100 text-white fw-bold shadow">
+                                    <span id="withdrawText">Request Withdrawal</span>
+                                </button>
+                            </div>
                         </div>
-                        
-                        <div class="mb-4">
-                            <label class="block text-gray-700 mb-2 font-medium">Account Number</label>
-                            <input type="text" id="withdrawAccount" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter your account number">
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label class="block text-gray-700 mb-2 font-medium">Amount (GE)</label>
-                            <input type="number" id="withdrawAmount" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter amount to withdraw">
-                            <p class="text-sm text-gray-500 mt-1">Minimum: 10 GE ($5.00)</p>
-                        </div>
-                        
-                        <button onclick="requestWithdrawal()" id="withdrawBtn" class="w-full gradient-bg hover:opacity-90 text-white py-3 rounded-lg font-bold transition-all flex items-center justify-center">
-                            <span id="withdrawText">Request Withdrawal</span>
-                            <div id="withdrawSpinner" class="loading-spinner ml-2 hidden"></div>
-                        </button>
                     </div>
                 </div>
                 
-                <div class="bg-white rounded-xl shadow-md p-6">
-                    <h3 class="font-bold text-lg mb-4 flex items-center">
-                        <i class="fas fa-history text-blue-500 mr-2"></i> Withdrawal History
-                    </h3>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-white">
-                            <thead>
-                                <tr class="border-b">
-                                    <th class="py-3 px-4 text-left">Date</th>
-                                    <th class="py-3 px-4 text-left">Method</th>
-                                    <th class="py-3 px-4 text-left">Amount</th>
-                                    <th class="py-3 px-4 text-left">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="withdrawalHistory">
-                                <tr>
-                                    <td colspan="4" class="py-4 text-center text-gray-500">No withdrawal history</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                <div class="card shadow animate__animated animate__fadeIn">
+                    <div class="card-body p-4">
+                        <h3 class="fw-bold fs-5 mb-4 d-flex align-items-center">
+                            <i class="fas fa-history text-primary me-2"></i> Withdrawal History 📜
+                        </h3>
+                        
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr class="border-top">
+                                        <th class="text-start">Date 📅</th>
+                                        <th class="text-start">Method 💳</th>
+                                        <th class="text-start">Amount 💰</th>
+                                        <th class="text-start">Status 🚦</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="withdrawalHistory">
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">No withdrawal history</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -613,166 +1190,235 @@
     </div>
 
     <!-- Footer -->
-    <footer class="gradient-bg text-white py-8">
-        <div class="container mx-auto px-4">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="mb-6 md:mb-0">
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-coins text-yellow-300 text-2xl"></i>
-                        <span class="font-bold text-xl">GE Coin Mining</span>
+    <footer class="gradient-bg text-white py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-4 mb-md-0">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-coins text-warning fs-3 me-2"></i>
+                        <span class="fw-bold fs-4">GE Coin Mining</span>
                     </div>
-                    <p class="mt-2">The easiest way to earn cryptocurrency</p>
+                    <p class="mt-2 mb-0">The easiest way to earn cryptocurrency</p>
                 </div>
-                <div class="flex space-x-6">
-                    <a href="#" class="hover:text-yellow-300 transition">Terms of Service</a>
-                    <a href="#" class="hover:text-yellow-300 transition">Privacy Policy</a>
-                    <a href="#" class="hover:text-yellow-300 transition">Contact Support</a>
+                <div class="col-md-6">
+                    <div class="d-flex flex-column flex-md-row justify-content-md-end gap-3">
+                        <a href="#" class="text-white text-decoration-none"><i class="fas fa-file-contract me-1"></i> Terms</a>
+                        <a href="#" class="text-white text-decoration-none"><i class="fas fa-lock me-1"></i> Privacy</a>
+                        <a href="#" class="text-white text-decoration-none"><i class="fas fa-headset me-1"></i> Support</a>
+                        <a href="#" class="text-white text-decoration-none"><i class="fas fa-info-circle me-1"></i> About</a>
+                    </div>
                 </div>
             </div>
-            <div class="mt-8 pt-6 border-t border-white border-opacity-20 text-center text-sm">
-                <p>&copy; 2023 GE Coin Mining. All rights reserved.</p>
+            <div class="mt-4 pt-3 border-top border-white border-opacity-20 text-center">
+                <p class="mb-0">&copy; 2023 GE Coin Mining. All rights reserved. 🚀</p>
             </div>
         </div>
     </footer>
 
     <!-- Auth Modal -->
-    <div id="authModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white rounded-xl p-6 w-full max-w-md animate-fadeIn">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-xl flex items-center">
-                    <i class="fas fa-user-circle text-blue-500 mr-2"></i>
-                    <span id="authModalTitle">Login</span>
-                </h3>
-                <button onclick="hideAuthModal()" class="text-gray-500 hover:text-gray-700 transition-all">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div id="loginForm">
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2 font-medium">Username</label>
-                    <input type="text" id="loginUsername" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+    <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content animate__animated animate__fadeIn">
+                <div class="modal-header">
+                    <h5 class="modal-title d-flex align-items-center">
+                        <i class="fas fa-user-circle text-primary me-2"></i>
+                        <span id="authModalTitle">Login</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2 font-medium">Password</label>
-                    <input type="password" id="loginPassword" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <div class="modal-body">
+                    <div id="loginForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Username 👤</label>
+                            <input type="text" id="loginUsername" class="form-control" placeholder="Enter your username">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Password 🔒</label>
+                            <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password">
+                        </div>
+                        <button onclick="userLogin()" id="loginBtn" class="btn btn-primary w-100 text-white fw-bold shadow">
+                            <span id="loginText">Login</span>
+                        </button>
+                        <p class="text-center mt-3 text-muted">
+                            Don't have an account? 
+                            <button onclick="showSignupForm()" class="btn btn-link p-0 text-primary fw-medium">Sign up</button>
+                        </p>
+                    </div>
+                    <div id="signupForm" class="d-none">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Username 👤</label>
+                            <input type="text" id="signupUsername" class="form-control" placeholder="Choose a username">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email 📧</label>
+                            <input type="email" id="signupEmail" class="form-control" placeholder="Enter your email">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Password 🔒</label>
+                            <input type="password" id="signupPassword" class="form-control" placeholder="Create a password">
+                            <div class="form-text">Password must be at least 6 characters</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Referral Code (Optional) 👥</label>
+                            <input type="text" id="signupReferral" class="form-control" placeholder="Enter referral code if any">
+                        </div>
+                        <button onclick="userSignup()" id="signupBtn" class="btn btn-primary w-100 text-white fw-bold shadow">
+                            <span id="signupText">Sign Up</span>
+                        </button>
+                        <p class="text-center mt-3 text-muted">
+                            Already have an account? 
+                            <button onclick="showLoginForm()" class="btn btn-link p-0 text-primary fw-medium">Login</button>
+                        </p>
+                    </div>
                 </div>
-                <button onclick="userLogin()" id="loginBtn" class="w-full gradient-bg hover:opacity-90 text-white py-3 rounded-lg font-bold transition-all flex items-center justify-center">
-                    <span id="loginText">Login</span>
-                    <div id="loginSpinner" class="loading-spinner ml-2 hidden"></div>
-                </button>
-                <p class="text-center mt-4 text-gray-600">
-                    Don't have an account? 
-                    <button onclick="showSignupForm()" class="text-blue-600 hover:text-blue-800 font-medium">Sign up</button>
-                </p>
-            </div>
-            <div id="signupForm" class="hidden">
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2 font-medium">Username</label>
-                    <input type="text" id="signupUsername" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2 font-medium">Email</label>
-                    <input type="email" id="signupEmail" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2 font-medium">Password</label>
-                    <input type="password" id="signupPassword" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2 font-medium">Referral Code (Optional)</label>
-                    <input type="text" id="signupReferral" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <button onclick="userSignup()" id="signupBtn" class="w-full gradient-bg hover:opacity-90 text-white py-3 rounded-lg font-bold transition-all flex items-center justify-center">
-                    <span id="signupText">Sign Up</span>
-                    <div id="signupSpinner" class="loading-spinner ml-2 hidden"></div>
-                </button>
-                <p class="text-center mt-4 text-gray-600">
-                    Already have an account? 
-                    <button onclick="showLoginForm()" class="text-blue-600 hover:text-blue-800 font-medium">Login</button>
-                </p>
             </div>
         </div>
     </div>
 
     <!-- Update Password Modal -->
-    <div id="updatePasswordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white rounded-xl p-6 w-full max-w-md animate-fadeIn">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-xl flex items-center">
-                    <i class="fas fa-key text-blue-500 mr-2"></i> Change Password
-                </h3>
-                <button onclick="hideUpdatePasswordModal()" class="text-gray-500 hover:text-gray-700 transition-all">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="mb-4">
-                <label class="block text-gray-700 mb-2 font-medium">Current Password</label>
-                <input type="password" id="currentPassword" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-            </div>
-            <div class="mb-4">
-                <label class="block text-gray-700 mb-2 font-medium">New Password</label>
-                <input type="password" id="newPassword" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-            </div>
-            <div class="mb-4">
-                <label class="block text-gray-700 mb-2 font-medium">Confirm New Password</label>
-                <input type="password" id="confirmPassword" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-            </div>
-            <div class="flex space-x-3">
-                <button onclick="hideUpdatePasswordModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-bold transition-all">
-                    Cancel
-                </button>
-                <button onclick="updatePassword()" id="updatePasswordBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold transition-all flex items-center justify-center">
-                    <span id="updatePasswordText">Update</span>
-                    <div id="updatePasswordSpinner" class="loading-spinner ml-2 hidden"></div>
-                </button>
+    <div class="modal fade" id="updatePasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content animate__animated animate__fadeIn">
+                <div class="modal-header">
+                    <h5 class="modal-title d-flex align-items-center">
+                        <i class="fas fa-key text-primary me-2"></i> Change Password 🔒
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Current Password 🔑</label>
+                        <input type="password" id="currentPassword" class="form-control" placeholder="Enter current password">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">New Password 🆕</label>
+                        <input type="password" id="newPassword" class="form-control" placeholder="Enter new password">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Confirm New Password 🔄</label>
+                        <input type="password" id="confirmPassword" class="form-control" placeholder="Confirm new password">
+                    </div>
+                    <div class="d-flex gap-3">
+                        <button type="button" class="btn btn-light flex-grow-1" data-bs-dismiss="modal">Cancel</button>
+                        <button onclick="updatePassword()" id="updatePasswordBtn" class="btn btn-primary flex-grow-1 text-white fw-bold shadow">
+                            <span id="updatePasswordText">Update</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Update Payment Modal -->
-    <div id="updatePaymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white rounded-xl p-6 w-full max-w-md animate-fadeIn">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-xl flex items-center">
-                    <i class="fas fa-wallet text-green-500 mr-2"></i> Payment Method
-                </h3>
-                <button onclick="hideUpdatePaymentModal()" class="text-gray-500 hover:text-gray-700 transition-all">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="mb-4">
-                <label class="block text-gray-700 mb-2 font-medium">Payment Method</label>
-                <select id="paymentMethod" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    <option value="bkash">bKash</option>
-                    <option value="nagad">Nagad</option>
-                    <option value="rocket">Rocket</option>
-                </select>
-            </div>
-            <div class="mb-4">
-                <label class="block text-gray-700 mb-2 font-medium">Account Number</label>
-                <input type="text" id="paymentAccount" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter your account number">
-            </div>
-            <div class="flex space-x-3">
-                <button onclick="hideUpdatePaymentModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-bold transition-all">
-                    Cancel
-                </button>
-                <button onclick="updatePaymentMethod()" id="updatePaymentBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold transition-all flex items-center justify-center">
-                    <span id="updatePaymentText">Save</span>
-                    <div id="updatePaymentSpinner" class="loading-spinner ml-2 hidden"></div>
-                </button>
+    <div class="modal fade" id="updatePaymentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content animate__animated animate__fadeIn">
+                <div class="modal-header">
+                    <h5 class="modal-title d-flex align-items-center">
+                        <i class="fas fa-wallet text-success me-2"></i> Payment Method 💳
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Payment Method 💰</label>
+                        <select id="paymentMethod" class="form-select">
+                            <option value="bkash">bKash</option>
+                            <option value="nagad">Nagad</option>
+                            <option value="rocket">Rocket</option>
+                            <option value="paypal">PayPal</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Account Number 🔢</label>
+                        <input type="text" id="paymentAccount" class="form-control" placeholder="Enter your account number">
+                    </div>
+                    <div class="d-flex gap-3">
+                        <button type="button" class="btn btn-light flex-grow-1" data-bs-dismiss="modal">Cancel</button>
+                        <button onclick="updatePaymentMethod()" id="updatePaymentBtn" class="btn btn-success flex-grow-1 text-white fw-bold shadow">
+                            <span id="updatePaymentText">Save</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Loading Spinner -->
-    <div id="loadingSpinner" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center">
-            <div class="loading-spinner mb-4" style="width: 40px; height: 40px; border-width: 4px;"></div>
-            <p class="text-gray-700 font-medium">Loading...</p>
+    <!-- Support Modal -->
+    <div class="modal fade" id="supportModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content animate__animated animate__fadeIn">
+                <div class="modal-header">
+                    <h5 class="modal-title d-flex align-items-center">
+                        <i class="fas fa-headset text-primary me-2"></i> Contact Support 🛎️
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Subject 📌</label>
+                        <input type="text" id="supportSubject" class="form-control" placeholder="What's this about?">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Message ✉️</label>
+                        <textarea id="supportMessage" class="form-control" rows="4" placeholder="Describe your issue"></textarea>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <button type="button" class="btn btn-light flex-grow-1" data-bs-dismiss="modal">Cancel</button>
+                        <button onclick="sendSupportMessage()" id="supportBtn" class="btn btn-primary flex-grow-1 text-white fw-bold shadow">
+                            <span id="supportText">Send</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Firebase configuration -->
+    <!-- Task Verification Modal -->
+    <div class="modal fade" id="taskVerificationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content animate__animated animate__fadeIn">
+                <div class="modal-header">
+                    <h5 class="modal-title d-flex align-items-center">
+                        <i class="fas fa-check-circle text-success me-2"></i> Task Verification ✅
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="telegramVerification" class="d-none">
+                        <p class="mb-3">Please join our Telegram channel and provide your Telegram username below for verification:</p>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Telegram Username</label>
+                            <input type="text" id="telegramUsername" class="form-control" placeholder="@username">
+                        </div>
+                        <a href="https://t.me/gecoinmining" target="_blank" class="btn btn-primary w-100 mb-3">
+                            <i class="fab fa-telegram me-2"></i> Join Telegram Channel
+                        </a>
+                    </div>
+                    <div id="facebookVerification" class="d-none">
+                        <p class="mb-3">Please join our Facebook group and provide your Facebook profile link below for verification:</p>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Facebook Profile Link</label>
+                            <input type="text" id="facebookProfile" class="form-control" placeholder="https://facebook.com/username">
+                        </div>
+                        <a href="https://facebook.com/groups/gecoinmining" target="_blank" class="btn btn-primary w-100 mb-3">
+                            <i class="fab fa-facebook me-2"></i> Join Facebook Group
+                        </a>
+                    </div>
+                    <button onclick="submitTaskVerification()" id="verifyTaskBtn" class="btn btn-success w-100 text-white fw-bold shadow">
+                        <span id="verifyTaskText">Submit Verification</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    
     <script>
         // Firebase configuration
         const firebaseConfig = {
@@ -798,37 +1444,138 @@
         let minWithdrawal = 10; // 10 GE ($5)
         let withdrawalFee = 0.05; // 5%
         let referralBonus = 0.1; // 10%
+        let currentTask = null;
+
+        // Emojis for the rain effect
+        const emojis = ['💰', '💎', '🪙', '💵', '💸', '🤑', '💲', '💳', '🧿', '✨', '🌟', '⭐', '🚀', '🎉', '🎊', '🏆', '🥇', '💎', '💍', '👑'];
+
+        // Bootstrap modal instances
+        let authModal, updatePasswordModal, updatePaymentModal, supportModal, taskVerificationModal;
+
+        // Initialize modals
+        document.addEventListener('DOMContentLoaded', function() {
+            authModal = new bootstrap.Modal(document.getElementById('authModal'));
+            updatePasswordModal = new bootstrap.Modal(document.getElementById('updatePasswordModal'));
+            updatePaymentModal = new bootstrap.Modal(document.getElementById('updatePaymentModal'));
+            supportModal = new bootstrap.Modal(document.getElementById('supportModal'));
+            taskVerificationModal = new bootstrap.Modal(document.getElementById('taskVerificationModal'));
+            
+            initApp();
+        });
+
+        // Show global notice
+        function showNotice(type, message, duration = 3000) {
+            const notice = document.createElement('div');
+            notice.className = `global-notice ${type}`;
+            notice.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                                  type === 'error' ? 'exclamation-circle' : 
+                                  type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.getElementById('globalNotice').appendChild(notice);
+            
+            // Auto remove after duration
+            setTimeout(() => {
+                notice.style.opacity = '0';
+                setTimeout(() => notice.remove(), 300);
+            }, duration);
+        }
+
+        // Show success notice
+        function showSuccess(message, duration = 3000) {
+            showNotice('success', message, duration);
+        }
+
+        // Show error notice
+        function showError(message, duration = 3000) {
+            showNotice('error', message, duration);
+        }
+
+        // Show warning notice
+        function showWarning(message, duration = 3000) {
+            showNotice('warning', message, duration);
+        }
+
+        // Show info notice
+        function showInfo(message, duration = 3000) {
+            showNotice('info', message, duration);
+        }
 
         // Show auth modal
         function showAuthModal(type) {
             if (type === 'login') {
-                document.getElementById('authModalTitle').textContent = 'Login';
-                document.getElementById('loginForm').classList.remove('hidden');
-                document.getElementById('signupForm').classList.add('hidden');
+                document.getElementById('authModalTitle').textContent = 'Login 🔑';
+                document.getElementById('loginForm').classList.remove('d-none');
+                document.getElementById('signupForm').classList.add('d-none');
             } else {
-                document.getElementById('authModalTitle').textContent = 'Sign Up';
-                document.getElementById('loginForm').classList.add('hidden');
-                document.getElementById('signupForm').classList.remove('hidden');
+                document.getElementById('authModalTitle').textContent = 'Sign Up 📝';
+                document.getElementById('loginForm').classList.add('d-none');
+                document.getElementById('signupForm').classList.remove('d-none');
             }
-            document.getElementById('authModal').classList.remove('hidden');
+            authModal.show();
         }
 
         // Hide auth modal
         function hideAuthModal() {
-            document.getElementById('authModal').classList.add('hidden');
+            authModal.hide();
+        }
+
+        // Show support modal
+        function showSupportModal() {
+            supportModal.show();
+        }
+
+        // Hide support modal
+        function hideSupportModal() {
+            supportModal.hide();
+        }
+
+        // Send support message
+        function sendSupportMessage() {
+            if (!currentUser) return;
+            
+            const subject = document.getElementById('supportSubject').value.trim();
+            const message = document.getElementById('supportMessage').value.trim();
+            
+            if (!subject || !message) {
+                showError("Please fill all fields");
+                return;
+            }
+            
+            // Save support ticket
+            const ticketId = Date.now();
+            db.ref('supportTickets/' + ticketId).set({
+                user: currentUser.username,
+                subject: subject,
+                message: message,
+                status: 'open',
+                createdAt: Date.now(),
+                updatedAt: Date.now()
+            }).then(() => {
+                hideSupportModal();
+                showSuccess("Support ticket submitted successfully!");
+                
+                // Clear form
+                document.getElementById('supportSubject').value = '';
+                document.getElementById('supportMessage').value = '';
+            }).catch(error => {
+                showError("Error submitting support ticket: " + error.message);
+            });
         }
 
         // Toggle between login/signup forms
         function showLoginForm() {
-            document.getElementById('authModalTitle').textContent = 'Login';
-            document.getElementById('loginForm').classList.remove('hidden');
-            document.getElementById('signupForm').classList.add('hidden');
+            document.getElementById('authModalTitle').textContent = 'Login 🔑';
+            document.getElementById('loginForm').classList.remove('d-none');
+            document.getElementById('signupForm').classList.add('d-none');
         }
 
         function showSignupForm() {
-            document.getElementById('authModalTitle').textContent = 'Sign Up';
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('signupForm').classList.remove('hidden');
+            document.getElementById('authModalTitle').textContent = 'Sign Up 📝';
+            document.getElementById('loginForm').classList.add('d-none');
+            document.getElementById('signupForm').classList.remove('d-none');
         }
 
         // Check if user is logged in
@@ -846,40 +1593,60 @@
 
         // Show homepage
         function showHomepage() {
-            document.getElementById('homeContent').classList.remove('hidden');
-            document.getElementById('dashboardContent').classList.add('hidden');
+            document.getElementById('homeContent').classList.remove('d-none');
+            document.getElementById('dashboardContent').classList.add('d-none');
             document.getElementById('navLinks').innerHTML = `
-                <a href="#home" class="hover:text-yellow-300 transition"><i class="fas fa-home mr-1"></i> Home</a>
-                <a href="#features" class="hover:text-yellow-300 transition"><i class="fas fa-star mr-1"></i> Features</a>
-                <a href="#how-it-works" class="hover:text-yellow-300 transition"><i class="fas fa-question-circle mr-1"></i> How It Works</a>
+                <li class="nav-item">
+                    <a class="nav-link" href="#home"><i class="fas fa-home me-1"></i> Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#features"><i class="fas fa-star me-1"></i> Features</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#how-it-works"><i class="fas fa-question-circle me-1"></i> How It Works</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#testimonials"><i class="fas fa-comments me-1"></i> Testimonials</a>
+                </li>
             `;
             document.getElementById('authButtons').innerHTML = `
-                <button onclick="showAuthModal('login')" class="bg-white hover:bg-gray-100 text-blue-600 px-4 py-2 rounded-lg font-bold transition-all">
-                    <i class="fas fa-sign-in-alt mr-2"></i> Login
+                <button onclick="showAuthModal('login')" class="btn btn-light text-primary me-2 fw-bold">
+                    <i class="fas fa-sign-in-alt me-2"></i> Login
                 </button>
-                <button onclick="showAuthModal('signup')" class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 px-4 py-2 rounded-lg font-bold transition-all">
-                    <i class="fas fa-user-plus mr-2"></i> Sign Up
+                <button onclick="showAuthModal('signup')" class="btn btn-warning text-white fw-bold">
+                    <i class="fas fa-user-plus me-2"></i> Sign Up
                 </button>
             `;
         }
 
         // Show dashboard
         function showDashboard() {
-            document.getElementById('homeContent').classList.add('hidden');
-            document.getElementById('dashboardContent').classList.remove('hidden');
+            document.getElementById('homeContent').classList.add('d-none');
+            document.getElementById('dashboardContent').classList.remove('d-none');
             document.getElementById('navLinks').innerHTML = `
-                <a href="#mining" class="hover:text-yellow-300 transition"><i class="fas fa-digging mr-1"></i> Mining</a>
-                <a href="#profile" class="hover:text-yellow-300 transition"><i class="fas fa-user mr-1"></i> Profile</a>
-                <a href="#refer" class="hover:text-yellow-300 transition"><i class="fas fa-users mr-1"></i> Referral</a>
-                <a href="#withdraw" class="hover:text-yellow-300 transition"><i class="fas fa-money-bill-wave mr-1"></i> Withdraw</a>
+                <li class="nav-item">
+                    <a class="nav-link" href="#mining"><i class="fas fa-digging me-1"></i> Mining</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#profile"><i class="fas fa-user me-1"></i> Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#tasks"><i class="fas fa-tasks me-1"></i> Tasks</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#refer"><i class="fas fa-users me-1"></i> Referral</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#withdraw"><i class="fas fa-money-bill-wave me-1"></i> Withdraw</a>
+                </li>
             `;
             document.getElementById('authButtons').innerHTML = `
-                <div class="hidden md:flex items-center bg-white bg-opacity-20 px-3 py-1 rounded-full">
-                    <i class="fas fa-coins text-yellow-300 mr-2"></i>
+                <div class="d-none d-md-flex align-items-center bg-white bg-opacity-20 px-3 py-1 rounded-pill shadow-sm me-2">
+                    <i class="fas fa-coins text-warning me-2"></i>
                     <span id="headerBalance">0 GE</span>
                 </div>
-                <button onclick="userLogout()" class="bg-white hover:bg-gray-100 text-blue-600 px-4 py-2 rounded-lg font-bold transition-all">
-                    <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                <button onclick="userLogout()" class="btn btn-light text-primary fw-bold">
+                    <i class="fas fa-sign-out-alt me-2"></i> Logout
                 </button>
             `;
         }
@@ -890,14 +1657,9 @@
             const password = document.getElementById('loginPassword').value.trim();
             
             if (!username || !password) {
-                alert("Please enter both username and password");
+                showError("Please enter both username and password");
                 return;
             }
-            
-            // Show loading
-            document.getElementById('loginText').classList.add('hidden');
-            document.getElementById('loginSpinner').classList.remove('hidden');
-            document.getElementById('loginBtn').disabled = true;
             
             // Check user in database
             db.ref('users/' + username).once('value').then(snap => {
@@ -924,14 +1686,10 @@
                     showDashboard();
                     startMining();
                     loadUserData();
+                    showSuccess("Login successful! Happy mining! ⛏️");
                 });
             }).catch(error => {
-                alert(error.message);
-            }).finally(() => {
-                // Reset button
-                document.getElementById('loginText').classList.remove('hidden');
-                document.getElementById('loginSpinner').classList.add('hidden');
-                document.getElementById('loginBtn').disabled = false;
+                showError(error.message);
             });
         }
 
@@ -943,19 +1701,14 @@
             const referralCode = document.getElementById('signupReferral').value.trim();
             
             if (!username || !email || !password) {
-                alert("Please fill all required fields");
+                showError("Please fill all required fields");
                 return;
             }
             
             if (password.length < 6) {
-                alert("Password must be at least 6 characters");
+                showError("Password must be at least 6 characters");
                 return;
             }
-            
-            // Show loading
-            document.getElementById('signupText').classList.add('hidden');
-            document.getElementById('signupSpinner').classList.remove('hidden');
-            document.getElementById('signupBtn').disabled = true;
             
             // Check if username exists
             db.ref('users/' + username).once('value').then(snap => {
@@ -1008,560 +1761,683 @@
                 return user;
             }).then(user => {
                 // Store user data in localStorage
-                localStorage.setItem('miningUser', JSON.stringify(user));
-                currentUser = user;
-                // Hide modal and show dashboard
-                hideAuthModal();
-                showDashboard();
-                startMining();
-                loadUserData();
-            }).catch(error => {
-                alert(error.message);
-            }).finally(() => {
-                // Reset button
-                document.getElementById('signupText').classList.remove('hidden');
-                document.getElementById('signupSpinner').classList.add('hidden');
-                document.getElementById('signupBtn').disabled = false;
-            });
-        }
-
-        // User logout
-        function userLogout() {
-            if (currentUser) {
-                // Record logout activity
-                db.ref('userLogs/' + Date.now()).set({
-                    user: currentUser.username,
-                    action: "logout",
-                    timestamp: Date.now()
+                    localStorage.setItem('miningUser', JSON.stringify(user));
+                    currentUser = user;
+                    // Hide modal and show dashboard
+                    hideAuthModal();
+                    showDashboard();
+                    startMining();
+                    loadUserData();
+                    showEmojiRain();
+                    showSuccess("Account created successfully! Happy mining! ⛏️");
+                }).catch(error => {
+                    showError(error.message);
                 });
-                
-                // Stop mining
-                stopMining();
-                
-                // Clear user data
-                currentUser = null;
-                localStorage.removeItem('miningUser');
-                
-                // Show homepage
-                showHomepage();
             }
-        }
 
-        // Generate referral code
-        function generateReferralCode(username) {
-            const randomNum = Math.floor(1000 + Math.random() * 9000);
-            return username.slice(0, 3).toUpperCase() + randomNum;
-        }
-
-        // Start mining
-        function startMining() {
-            if (!currentUser || miningInterval) return;
-            
-            // Update mining rate display
-            document.getElementById('miningRate').textContent = miningRate.toFixed(6) + ' GE/s';
-            
-            // Start mining interval
-            let progress = 0;
-            miningInterval = setInterval(() => {
-                // Update progress bar
-                progress = (progress + 1) % 100;
-                document.getElementById('miningProgressBar').style.width = progress + '%';
-                document.getElementById('miningProgressText').textContent = progress + '%';
-                
-                // Add coins to balance (every second)
-                if (progress % 10 === 0) {
-                    addMiningReward();
-                }
-            }, 100);
-        }
-
-        // Stop mining
-        function stopMining() {
-            if (miningInterval) {
-                clearInterval(miningInterval);
-                miningInterval = null;
-            }
-        }
-
-        // Add mining reward to user balance
-        function addMiningReward() {
-            if (!currentUser) return;
-            
-            const reward = miningRate;
-            
-            // Update user balance in database
-            db.ref('users/' + currentUser.username).transaction(user => {
-                if (user) {
-                    user.balance = (user.balance || 0) + reward;
-                    user.totalEarned = (user.totalEarned || 0) + reward;
-                    user.lastActivity = Date.now();
+            // User logout
+            function userLogout() {
+                if (currentUser) {
+                    // Record logout activity
+                    db.ref('userLogs/' + Date.now()).set({
+                        user: currentUser.username,
+                        action: "logout",
+                        timestamp: Date.now()
+                    });
                     
-                    // If user was referred by someone, add referral bonus
-                    if (user.referredBy) {
-                        db.ref('users').orderByChild('referralCode').equalTo(user.referredBy).once('value').then(snap => {
-                            const referrer = snap.val();
-                            if (referrer) {
-                                const referrerUsername = Object.keys(referrer)[0];
-                                const referralReward = reward * referralBonus;
-                                
-                                // Update referrer's balance
-                                db.ref('users/' + referrerUsername).transaction(refUser => {
-                                    if (refUser) {
-                                        refUser.balance = (refUser.balance || 0) + referralReward;
-                                        refUser.referralEarnings = (refUser.referralEarnings || 0) + referralReward;
-                                        refUser.totalEarned = (refUser.totalEarned || 0) + referralReward;
-                                    }
-                                    return refUser;
-                                });
-                            }
-                        });
-                    }
+                    // Stop mining
+                    stopMining();
+                    
+                    // Clear user data
+                    currentUser = null;
+                    localStorage.removeItem('miningUser');
+                    
+                    // Show homepage
+                    showHomepage();
+                    showSuccess("Logged out successfully. See you soon! 👋");
                 }
-                return user;
-            }).then(() => {
-                // Update UI
-                loadUserData();
-            });
-        }
+            }
 
-        // Load user data
-        function loadUserData() {
-            if (!currentUser) return;
-            
-            showLoading();
-            
-            // Get updated user data
-            db.ref('users/' + currentUser.username).once('value').then(snap => {
-                const user = snap.val();
-                if (!user) return;
+            // Generate referral code
+            function generateReferralCode(username) {
+                const randomNum = Math.floor(1000 + Math.random() * 9000);
+                return username.slice(0, 3).toUpperCase() + randomNum;
+            }
+
+            // Start mining
+            function startMining() {
+                if (!currentUser || miningInterval) return;
                 
-                currentUser = {
-                    ...currentUser,
-                    ...user
-                };
+                // Update mining rate display
+                document.getElementById('miningRate').textContent = miningRate.toFixed(6) + ' GE/s';
                 
-                // Save to localStorage
-                localStorage.setItem('miningUser', JSON.stringify(currentUser));
+                // Start mining interval
+                let progress = 0;
+                miningInterval = setInterval(() => {
+                    // Update progress bar
+                    progress = (progress + 1) % 100;
+                    document.getElementById('miningProgressBar').style.width = progress + '%';
+                    document.getElementById('miningProgressText').textContent = progress + '%';
+                    
+                    // Add coins to balance (every second)
+                    if (progress % 10 === 0) {
+                        addMiningReward();
+                    }
+                }, 100);
+            }
+
+            // Stop mining
+            function stopMining() {
+                if (miningInterval) {
+                    clearInterval(miningInterval);
+                    miningInterval = null;
+                }
+            }
+
+            // Add mining reward to user balance
+            function addMiningReward() {
+                if (!currentUser) return;
                 
-                // Update profile info
-                document.getElementById('profileUsername').textContent = user.username;
-                document.getElementById('profileEmail').textContent = user.email || 'Not set';
-                document.getElementById('profileJoined').textContent = formatDate(user.joinedAt);
-                document.getElementById('profileLastActive').textContent = formatDate(user.lastActivity);
-                document.getElementById('profileReferralCode').textContent = user.referralCode || 'N/A';
+                const reward = miningRate;
                 
-                // Update status badge
-                const statusBadge = document.getElementById('profileStatus');
-                statusBadge.className = 'status-badge ' + (user.status === 'active' ? 'status-approved' : 'status-pending');
-                statusBadge.textContent = user.status || 'active';
-                
-                // Update balance displays
-                document.getElementById('currentBalance').textContent = user.balance.toFixed(6) + ' GE';
-                document.getElementById('profileBalance').textContent = user.balance.toFixed(6) + ' GE';
-                document.getElementById('profileTotalEarned').textContent = user.totalEarned.toFixed(6) + ' GE';
-                document.getElementById('profileTotalWithdrawn').textContent = user.totalWithdrawn.toFixed(6) + ' GE';
-                document.getElementById('withdrawBalance').textContent = user.balance.toFixed(6) + ' GE ($' + (user.balance * coinValue).toFixed(2) + ')';
-                document.getElementById('headerBalance').textContent = user.balance.toFixed(6) + ' GE';
-                
-                // Update today's earnings (simplified - in real app would calculate from logs)
-                document.getElementById('todayEarnings').textContent = (miningRate * 60 * 60 * 24).toFixed(6) + ' GE ($' + (miningRate * 60 * 60 * 24 * coinValue).toFixed(2) + ')';
-                document.getElementById('totalEarnings').textContent = user.totalEarned.toFixed(6) + ' GE ($' + (user.totalEarned * coinValue).toFixed(2) + ')';
-                
-                // Update referral stats
-                document.getElementById('profileReferralEarnings').textContent = user.referralEarnings.toFixed(6) + ' GE';
-                document.getElementById('profileReferrals').textContent = user.referrals || '0';
-                
-                // Update referral link
-                document.getElementById('referralLink').value = window.location.origin + '/index.html?ref=' + user.referralCode;
-                
-                // Load referrals list
-                if (user.referralCode) {
-                    return db.ref('users').orderByChild('referredBy').equalTo(user.referralCode).once('value').then(snap => {
-                        const referrals = snap.val() || {};
-                        const referralList = document.getElementById('referralList');
-                        referralList.innerHTML = '';
+                // Update user balance in database
+                db.ref('users/' + currentUser.username).transaction(user => {
+                    if (user) {
+                        user.balance = (user.balance || 0) + reward;
+                        user.totalEarned = (user.totalEarned || 0) + reward;
+                        user.lastActivity = Date.now();
                         
-                        if (Object.keys(referrals).length === 0) {
-                            referralList.innerHTML = `
-                                <tr>
-                                    <td colspan="4" class="py-4 text-center text-gray-500">No referrals yet</td>
-                                </tr>
-                            `;
-                        } else {
-                            Object.keys(referrals).forEach(username => {
-                                const refUser = referrals[username];
-                                const tr = document.createElement('tr');
-                                tr.className = "border-b";
-                                tr.innerHTML = `
-                                    <td class="py-3 px-4">${username}</td>
-                                    <td class="py-3 px-4">${formatDate(refUser.joinedAt)}</td>
-                                    <td class="py-3 px-4">
-                                        <span class="status-badge ${refUser.status === 'active' ? 'status-approved' : 'status-pending'}">
-                                            ${refUser.status || 'active'}
-                                        </span>
-                                    </td>
-                                    <td class="py-3 px-4">${(refUser.totalEarned * referralBonus).toFixed(6)} GE</td>
-                                `;
-                                referralList.appendChild(tr);
+                        // If user was referred by someone, add referral bonus
+                        if (user.referredBy) {
+                            db.ref('users').orderByChild('referralCode').equalTo(user.referredBy).once('value').then(snap => {
+                                const referrer = snap.val();
+                                if (referrer) {
+                                    const referrerUsername = Object.keys(referrer)[0];
+                                    const referralReward = reward * referralBonus;
+                                    
+                                    // Update referrer's balance
+                                    db.ref('users/' + referrerUsername).transaction(refUser => {
+                                        if (refUser) {
+                                            refUser.balance = (refUser.balance || 0) + referralReward;
+                                            refUser.referralEarnings = (refUser.referralEarnings || 0) + referralReward;
+                                            refUser.totalEarned = (refUser.totalEarned || 0) + referralReward;
+                                        }
+                                        return refUser;
+                                    });
+                                }
                             });
                         }
-                        
-                        // Update referral stats
-                        document.getElementById('totalReferrals').textContent = Object.keys(referrals).length;
-                        document.getElementById('activeReferrals').textContent = Object.values(referrals).filter(u => u.status === 'active').length;
-                        document.getElementById('totalReferralEarnings').textContent = user.referralEarnings.toFixed(6) + ' GE';
-                        
-                        const lastReferral = Object.values(referrals).sort((a, b) => b.joinedAt - a.joinedAt)[0];
-                        document.getElementById('lastReferral').textContent = lastReferral ? formatDate(lastReferral.joinedAt) : 'None';
-                    });
-                }
-            }).then(() => {
-                // Load withdrawal history
-                return db.ref('withdrawals').orderByChild('user').equalTo(currentUser.username).once('value').then(snap => {
-                    const withdrawals = snap.val() || {};
-                    const historyTable = document.getElementById('withdrawalHistory');
-                    historyTable.innerHTML = '';
-                    
-                    if (Object.keys(withdrawals).length === 0) {
-                        historyTable.innerHTML = `
-                            <tr>
-                                <td colspan="4" class="py-4 text-center text-gray-500">No withdrawal history</td>
-                            </tr>
-                        `;
-                    } else {
-                        Object.keys(withdrawals).reverse().forEach(id => {
-                            const withdrawal = withdrawals[id];
-                            const tr = document.createElement('tr');
-                            tr.className = "border-b";
-                            tr.innerHTML = `
-                                <td class="py-3 px-4">${formatDate(withdrawal.requestedAt)}</td>
-                                <td class="py-3 px-4">${withdrawal.method.toUpperCase()}</td>
-                                <td class="py-3 px-4">${withdrawal.amount} GE ($${(withdrawal.amount * coinValue).toFixed(2)})</td>
-                                <td class="py-3 px-4">
-                                    <span class="status-badge ${withdrawal.status === 'approved' ? 'status-approved' : 
-                                        withdrawal.status === 'rejected' ? 'status-rejected' : 'status-pending'}">
-                                        ${withdrawal.status}
-                                    </span>
-                                </td>
-                            `;
-                            historyTable.appendChild(tr);
-                        });
                     }
-                });
-            }).catch(error => {
-                console.error("Error loading user data:", error);
-            }).finally(() => {
-                hideLoading();
-            });
-        }
-
-        // Copy referral link
-        function copyReferralLink() {
-            if (!currentUser) return;
-            
-            const referralLink = document.getElementById('referralLink');
-            referralLink.select();
-            document.execCommand('copy');
-            
-            alert("Referral link copied to clipboard!");
-        }
-
-        // Share on Facebook
-        function shareOnFacebook() {
-            if (!currentUser) return;
-            
-            const link = document.getElementById('referralLink').value;
-            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`, '_blank');
-        }
-
-        // Share on WhatsApp
-        function shareOnWhatsApp() {
-            if (!currentUser) return;
-            
-            const link = document.getElementById('referralLink').value;
-            const text = `Join GE Coin Mining and start earning cryptocurrency! Use my referral link: ${link}`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-        }
-
-        // Request withdrawal
-        function requestWithdrawal() {
-            if (!currentUser) return;
-            
-            const method = document.getElementById('withdrawMethod').value;
-            const account = document.getElementById('withdrawAccount').value.trim();
-            const amount = parseFloat(document.getElementById('withdrawAmount').value);
-            
-            if (!method || !account) {
-                alert("Please select payment method and enter account number");
-                return;
-            }
-            
-            if (!amount || amount < minWithdrawal) {
-                alert(`Minimum withdrawal amount is ${minWithdrawal} GE ($${(minWithdrawal * coinValue).toFixed(2)})`);
-                return;
-            }
-            
-            if (amount > currentUser.balance) {
-                alert("Insufficient balance");
-                return;
-            }
-            
-            // Calculate fee and net amount
-            const fee = amount * withdrawalFee;
-            const netAmount = amount - fee;
-            
-            if (confirm(`Request withdrawal of ${amount} GE ($${(amount * coinValue).toFixed(2)})?\nFee: ${fee.toFixed(6)} GE ($${(fee * coinValue).toFixed(2)})\nYou will receive: ${netAmount.toFixed(6)} GE ($${(netAmount * coinValue).toFixed(2)})`)) {
-                // Show loading
-                document.getElementById('withdrawText').classList.add('hidden');
-                document.getElementById('withdrawSpinner').classList.remove('hidden');
-                document.getElementById('withdrawBtn').disabled = true;
-                
-                // Create withdrawal request
-                const withdrawalId = Date.now();
-                const withdrawal = {
-                    user: currentUser.username,
-                    method: method,
-                    account: account,
-                    amount: amount,
-                    fee: fee,
-                    netAmount: netAmount,
-                    status: "pending",
-                    requestedAt: Date.now(),
-                    processedAt: null,
-                    processedBy: null
-                };
-                
-                // Save withdrawal request
-                db.ref('withdrawals/' + withdrawalId).set(withdrawal).then(() => {
-                    // Deduct from user balance
-                    return db.ref('users/' + currentUser.username).update({
-                        balance: currentUser.balance - amount,
-                        totalWithdrawn: (currentUser.totalWithdrawn || 0) + amount,
-                        lastActivity: Date.now()
-                    });
+                    return user;
                 }).then(() => {
                     // Update UI
                     loadUserData();
-                    alert("Withdrawal request submitted successfully! It will be processed within 24 hours.");
+                });
+            }
+
+            // Load user data
+            function loadUserData() {
+                if (!currentUser) return;
+                
+                // Get updated user data
+                db.ref('users/' + currentUser.username).once('value').then(snap => {
+                    const user = snap.val();
+                    if (!user) return;
+                    
+                    currentUser = {
+                        ...currentUser,
+                        ...user
+                    };
+                    
+                    // Save to localStorage
+                    localStorage.setItem('miningUser', JSON.stringify(currentUser));
+                    
+                    // Update profile info
+                    document.getElementById('profileUsername').textContent = user.username;
+                    document.getElementById('profileEmail').textContent = user.email || 'Not set';
+                    document.getElementById('profileJoined').textContent = formatDate(user.joinedAt);
+                    document.getElementById('profileLastActive').textContent = formatDate(user.lastActivity);
+                    document.getElementById('profileReferralCode').textContent = user.referralCode || 'N/A';
+                    
+                    // Update status badge
+                    const statusBadge = document.getElementById('profileStatus');
+                    statusBadge.className = 'status-badge ' + (user.status === 'active' ? 'status-approved' : 'status-pending');
+                    statusBadge.textContent = user.status || 'active';
+                    
+                    // Update balance displays
+                    document.getElementById('currentBalance').textContent = user.balance.toFixed(6) + ' GE';
+                    document.getElementById('profileBalance').textContent = user.balance.toFixed(6) + ' GE';
+                    document.getElementById('profileTotalEarned').textContent = user.totalEarned.toFixed(6) + ' GE';
+                    document.getElementById('profileTotalWithdrawn').textContent = user.totalWithdrawn.toFixed(6) + ' GE';
+                    document.getElementById('withdrawBalance').textContent = user.balance.toFixed(6) + ' GE ($' + (user.balance * coinValue).toFixed(2) + ')';
+                    document.getElementById('headerBalance').textContent = user.balance.toFixed(6) + ' GE';
+                    
+                    // Update today's earnings (simplified - in real app would calculate from logs)
+                    document.getElementById('todayEarnings').textContent = (miningRate * 60 * 60 * 24).toFixed(6) + ' GE ($' + (miningRate * 60 * 60 * 24 * coinValue).toFixed(2) + ')';
+                    document.getElementById('totalEarnings').textContent = user.totalEarned.toFixed(6) + ' GE ($' + (user.totalEarned * coinValue).toFixed(2) + ')';
+                    
+                    // Update referral stats
+                    document.getElementById('profileReferralEarnings').textContent = user.referralEarnings.toFixed(6) + ' GE';
+                    document.getElementById('profileReferrals').textContent = user.referrals || '0';
+                    
+                    // Update referral link
+                    document.getElementById('referralLink').value = window.location.origin + window.location.pathname + '?ref=' + user.referralCode;
+                    
+                    // Load referrals list
+                    if (user.referralCode) {
+                        return db.ref('users').orderByChild('referredBy').equalTo(user.referralCode).once('value').then(snap => {
+                            const referrals = snap.val() || {};
+                            const referralList = document.getElementById('referralList');
+                            referralList.innerHTML = '';
+                            
+                            if (Object.keys(referrals).length === 0) {
+                                referralList.innerHTML = `
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">No referrals yet</td>
+                                    </tr>
+                                `;
+                            } else {
+                                Object.keys(referrals).forEach(username => {
+                                    const refUser = referrals[username];
+                                    const tr = document.createElement('tr');
+                                    tr.className = "border-top";
+                                    tr.innerHTML = `
+                                        <td class="py-3">${username}</td>
+                                        <td class="py-3">${formatDate(refUser.joinedAt)}</td>
+                                        <td class="py-3">
+                                            <span class="status-badge ${refUser.status === 'active' ? 'status-approved' : 'status-pending'}">
+                                                ${refUser.status || 'active'}
+                                            </span>
+                                        </td>
+                                        <td class="py-3">${(refUser.totalEarned * referralBonus).toFixed(6)} GE</td>
+                                    `;
+                                    referralList.appendChild(tr);
+                                });
+                            }
+                            
+                            // Update referral stats
+                            document.getElementById('totalReferrals').textContent = Object.keys(referrals).length;
+                            document.getElementById('activeReferrals').textContent = Object.values(referrals).filter(u => u.status === 'active').length;
+                            document.getElementById('totalReferralEarnings').textContent = user.referralEarnings.toFixed(6) + ' GE';
+                            
+                            const lastReferral = Object.values(referrals).sort((a, b) => b.joinedAt - a.joinedAt)[0];
+                            document.getElementById('lastReferral').textContent = lastReferral ? formatDate(lastReferral.joinedAt) : 'None';
+                        });
+                    }
+                }).then(() => {
+                    // Load withdrawal history
+                    return db.ref('withdrawals').orderByChild('user').equalTo(currentUser.username).once('value').then(snap => {
+                        const withdrawals = snap.val() || {};
+                        const historyTable = document.getElementById('withdrawalHistory');
+                        historyTable.innerHTML = '';
+                        
+                        if (Object.keys(withdrawals).length === 0) {
+                            historyTable.innerHTML = `
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">No withdrawal history</td>
+                                </tr>
+                            `;
+                        } else {
+                            Object.keys(withdrawals).reverse().forEach(id => {
+                                const withdrawal = withdrawals[id];
+                                const tr = document.createElement('tr');
+                                tr.className = "border-top";
+                                tr.innerHTML = `
+                                    <td class="py-3">${formatDate(withdrawal.requestedAt)}</td>
+                                    <td class="py-3">${withdrawal.method.toUpperCase()}</td>
+                                    <td class="py-3">${withdrawal.amount} GE ($${(withdrawal.amount * coinValue).toFixed(2)})</td>
+                                    <td class="py-3">
+                                        <span class="status-badge ${withdrawal.status === 'approved' ? 'status-approved' : 
+                                            withdrawal.status === 'rejected' ? 'status-rejected' : 'status-pending'}">
+                                            ${withdrawal.status}
+                                        </span>
+                                    </td>
+                                `;
+                                historyTable.appendChild(tr);
+                            });
+                        }
+                    });
+                }).then(() => {
+                    // Load completed tasks
+                    return db.ref('userTasks').orderByChild('user').equalTo(currentUser.username).once('value').then(snap => {
+                        const tasks = snap.val() || {};
+                        const completedTasksContainer = document.getElementById('completedTasks');
+                        completedTasksContainer.innerHTML = '';
+                        
+                        if (Object.keys(tasks).length === 0) {
+                            completedTasksContainer.innerHTML = `
+                                <div class="col-12">
+                                    <p class="text-muted text-center py-4">No completed tasks yet</p>
+                                </div>
+                            `;
+                        } else {
+                            Object.keys(tasks).reverse().forEach(id => {
+                                const task = tasks[id];
+                                const col = document.createElement('div');
+                                col.className = "col-md-6";
+                                col.innerHTML = `
+                                    <div class="card task-card ${task.status} h-100">
+                                        <div class="card-body p-4">
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <h3 class="fw-bold fs-5 mb-0">${task.name}</h3>
+                                                <span class="task-reward">+${task.reward} GE</span>
+                                            </div>
+                                            <p class="text-muted mb-3">${task.description}</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="task-status task-status-${task.status}">${task.status === 'completed' ? 'Verified' : 'Rejected'}</span>
+                                                <small class="text-muted">${formatDate(task.completedAt)}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                completedTasksContainer.appendChild(col);
+                            });
+                        }
+                    });
+                }).catch(error => {
+                    console.error("Error loading user data:", error);
+                    showError("Error loading user data. Please refresh the page.");
+                });
+            }
+
+            // Copy referral link
+            function copyReferralLink() {
+                if (!currentUser) return;
+                
+                const referralLink = document.getElementById('referralLink');
+                referralLink.select();
+                document.execCommand('copy');
+                
+                showSuccess("Referral link copied to clipboard! 📋");
+            }
+
+            // Share on Facebook
+            function shareOnFacebook() {
+                if (!currentUser) return;
+                
+                const link = document.getElementById('referralLink').value;
+                const text = `Join GE Coin Mining and start earning cryptocurrency! Use my referral link: ${link}`;
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}&quote=${encodeURIComponent(text)}`, '_blank');
+            }
+
+            // Share on WhatsApp
+            function shareOnWhatsApp() {
+                if (!currentUser) return;
+                
+                const link = document.getElementById('referralLink').value;
+                const text = `Join GE Coin Mining and start earning cryptocurrency! Use my referral link: ${link}`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+            }
+
+            // Share on Twitter
+            function shareOnTwitter() {
+                if (!currentUser) return;
+                
+                const link = document.getElementById('referralLink').value;
+                const text = `Join GE Coin Mining and start earning cryptocurrency! Use my referral link: ${link}`;
+                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+            }
+
+            // Request withdrawal
+            function requestWithdrawal() {
+                if (!currentUser) return;
+                
+                const method = document.getElementById('withdrawMethod').value;
+                const account = document.getElementById('withdrawAccount').value.trim();
+                const amount = parseFloat(document.getElementById('withdrawAmount').value);
+                
+                if (!method || !account) {
+                    showError("Please select payment method and enter account number");
+                    return;
+                }
+                
+                if (!amount || amount < minWithdrawal) {
+                    showError(`Minimum withdrawal amount is ${minWithdrawal} GE ($${(minWithdrawal * coinValue).toFixed(2)})`);
+                    return;
+                }
+                
+                if (amount > currentUser.balance) {
+                    showError("Insufficient balance");
+                    return;
+                }
+                
+                // Calculate fee and net amount
+                const fee = amount * withdrawalFee;
+                const netAmount = amount - fee;
+                
+                if (confirm(`Request withdrawal of ${amount} GE ($${(amount * coinValue).toFixed(2)})?\nFee: ${fee.toFixed(6)} GE ($${(fee * coinValue).toFixed(2)})\nYou will receive: ${netAmount.toFixed(6)} GE ($${(netAmount * coinValue).toFixed(2)})`)) {
+                    // Create withdrawal request
+                    const withdrawalId = Date.now();
+                    const withdrawal = {
+                        user: currentUser.username,
+                        method: method,
+                        account: account,
+                        amount: amount,
+                        fee: fee,
+                        netAmount: netAmount,
+                        status: "pending",
+                        requestedAt: Date.now(),
+                        processedAt: null,
+                        processedBy: null
+                    };
+                    
+                    // Save withdrawal request
+                    db.ref('withdrawals/' + withdrawalId).set(withdrawal).then(() => {
+                        // Deduct from user balance
+                        return db.ref('users/' + currentUser.username).update({
+                            balance: currentUser.balance - amount,
+                            totalWithdrawn: (currentUser.totalWithdrawn || 0) + amount,
+                            lastActivity: Date.now()
+                        });
+                    }).then(() => {
+                        // Update UI
+                        loadUserData();
+                        showSuccess("Withdrawal request submitted successfully! It will be processed within 24 hours. ⏳");
+                        
+                        // Record activity
+                        db.ref('userLogs/' + Date.now()).set({
+                            user: currentUser.username,
+                            action: "withdrawal_request",
+                            details: `Requested withdrawal of ${amount} GE`,
+                            timestamp: Date.now()
+                        });
+                    }).catch(error => {
+                        showError("Error submitting withdrawal request: " + error.message);
+                    });
+                }
+            }
+
+            // Show update password modal
+            function showUpdatePasswordModal() {
+                document.getElementById('currentPassword').value = "";
+                document.getElementById('newPassword').value = "";
+                document.getElementById('confirmPassword').value = "";
+                updatePasswordModal.show();
+            }
+
+            // Hide update password modal
+            function hideUpdatePasswordModal() {
+                updatePasswordModal.hide();
+            }
+
+            // Update password
+            function updatePassword() {
+                if (!currentUser) return;
+                
+                const currentPass = document.getElementById('currentPassword').value;
+                const newPass = document.getElementById('newPassword').value;
+                const confirmPass = document.getElementById('confirmPassword').value;
+                
+                if (!currentPass || !newPass || !confirmPass) {
+                    showError("Please fill all fields");
+                    return;
+                }
+                
+                if (newPass !== confirmPass) {
+                    showError("New passwords don't match");
+                    return;
+                }
+                
+                if (newPass.length < 6) {
+                    showError("Password must be at least 6 characters");
+                    return;
+                }
+                
+                // Verify current password
+                db.ref('users/' + currentUser.username).once('value').then(snap => {
+                    const user = snap.val();
+                    if (!user || user.password !== currentPass) {
+                        throw new Error("Current password is incorrect");
+                    }
+                    
+                    // Update password
+                    return db.ref('users/' + currentUser.username).update({
+                        password: newPass,
+                        lastActivity: Date.now()
+                    });
+                }).then(() => {
+                    // Update local user data
+                    currentUser.password = newPass;
+                    localStorage.setItem('miningUser', JSON.stringify(currentUser));
+                    
+                    // Hide modal and show success
+                    hideUpdatePasswordModal();
+                    showSuccess("Password updated successfully! 🔒");
                     
                     // Record activity
                     db.ref('userLogs/' + Date.now()).set({
                         user: currentUser.username,
-                        action: "withdrawal_request",
-                        details: `Requested withdrawal of ${amount} GE`,
+                        action: "password_change",
                         timestamp: Date.now()
                     });
                 }).catch(error => {
-                    alert("Error submitting withdrawal request: " + error.message);
-                }).finally(() => {
-                    // Reset button
-                    document.getElementById('withdrawText').classList.remove('hidden');
-                    document.getElementById('withdrawSpinner').classList.add('hidden');
-                    document.getElementById('withdrawBtn').disabled = false;
+                    showError(error.message);
                 });
             }
-        }
 
-        // Show update password modal
-        function showUpdatePasswordModal() {
-            document.getElementById('currentPassword').value = "";
-            document.getElementById('newPassword').value = "";
-            document.getElementById('confirmPassword').value = "";
-            document.getElementById('updatePasswordModal').classList.remove('hidden');
-        }
-
-        // Hide update password modal
-        function hideUpdatePasswordModal() {
-            document.getElementById('updatePasswordModal').classList.add('hidden');
-        }
-
-        // Update password
-        function updatePassword() {
-            if (!currentUser) return;
-            
-            const currentPass = document.getElementById('currentPassword').value;
-            const newPass = document.getElementById('newPassword').value;
-            const confirmPass = document.getElementById('confirmPassword').value;
-            
-            if (!currentPass || !newPass || !confirmPass) {
-                alert("Please fill all fields");
-                return;
+            // Show update payment modal
+            function showUpdatePaymentModal() {
+                document.getElementById('paymentMethod').value = currentUser.paymentMethod || 'bkash';
+                document.getElementById('paymentAccount').value = currentUser.paymentAccount || '';
+                updatePaymentModal.show();
             }
-            
-            if (newPass !== confirmPass) {
-                alert("New passwords don't match");
-                return;
-            }
-            
-            if (newPass.length < 6) {
-                alert("Password must be at least 6 characters");
-                return;
-            }
-            
-            // Show loading
-            document.getElementById('updatePasswordText').classList.add('hidden');
-            document.getElementById('updatePasswordSpinner').classList.remove('hidden');
-            document.getElementById('updatePasswordBtn').disabled = true;
-            
-            // Verify current password
-            db.ref('users/' + currentUser.username).once('value').then(snap => {
-                const user = snap.val();
-                if (!user || user.password !== currentPass) {
-                    throw new Error("Current password is incorrect");
-                }
-                
-                // Update password
-                return db.ref('users/' + currentUser.username).update({
-                    password: newPass,
-                    lastActivity: Date.now()
-                });
-            }).then(() => {
-                // Update local user data
-                currentUser.password = newPass;
-                localStorage.setItem('miningUser', JSON.stringify(currentUser));
-                
-                // Hide modal and show success
-                hideUpdatePasswordModal();
-                alert("Password updated successfully!");
-                
-                // Record activity
-                db.ref('userLogs/' + Date.now()).set({
-                    user: currentUser.username,
-                    action: "password_change",
-                    timestamp: Date.now()
-                });
-            }).catch(error => {
-                alert(error.message);
-            }).finally(() => {
-                // Reset button
-                document.getElementById('updatePasswordText').classList.remove('hidden');
-                document.getElementById('updatePasswordSpinner').classList.add('hidden');
-                document.getElementById('updatePasswordBtn').disabled = false;
-            });
-        }
 
-        // Show update payment modal
-        function showUpdatePaymentModal() {
-            document.getElementById('paymentMethod').value = currentUser.paymentMethod || 'bkash';
-            document.getElementById('paymentAccount').value = currentUser.paymentAccount || '';
-            document.getElementById('updatePaymentModal').classList.remove('hidden');
-        }
-
-        // Hide update payment modal
-        function hideUpdatePaymentModal() {
-            document.getElementById('updatePaymentModal').classList.add('hidden');
-        }
-
-        // Update payment method
-        function updatePaymentMethod() {
-            if (!currentUser) return;
-            
-            const method = document.getElementById('paymentMethod').value;
-            const account = document.getElementById('paymentAccount').value.trim();
-            
-            if (!method || !account) {
-                alert("Please select payment method and enter account number");
-                return;
+            // Hide update payment modal
+            function hideUpdatePaymentModal() {
+                updatePaymentModal.hide();
             }
-            
-            // Show loading
-            document.getElementById('updatePaymentText').classList.add('hidden');
-            document.getElementById('updatePaymentSpinner').classList.remove('hidden');
-            document.getElementById('updatePaymentBtn').disabled = true;
-            
+
             // Update payment method
-            db.ref('users/' + currentUser.username).update({
-                paymentMethod: method,
-                paymentAccount: account,
-                lastActivity: Date.now()
-            }).then(() => {
-                // Update local user data
-                currentUser.paymentMethod = method;
-                currentUser.paymentAccount = account;
-                localStorage.setItem('miningUser', JSON.stringify(currentUser));
+            function updatePaymentMethod() {
+                if (!currentUser) return;
                 
-                // Hide modal and show success
-                hideUpdatePaymentModal();
-                alert("Payment method updated successfully!");
+                const method = document.getElementById('paymentMethod').value;
+                const account = document.getElementById('paymentAccount').value.trim();
                 
-                // Record activity
-                db.ref('userLogs/' + Date.now()).set({
-                    user: currentUser.username,
-                    action: "payment_update",
-                    details: `Updated to ${method}: ${account}`,
-                    timestamp: Date.now()
-                });
-            }).catch(error => {
-                alert("Error updating payment method: " + error.message);
-            }).finally(() => {
-                // Reset button
-                document.getElementById('updatePaymentText').classList.remove('hidden');
-                document.getElementById('updatePaymentSpinner').classList.add('hidden');
-                document.getElementById('updatePaymentBtn').disabled = false;
-            });
-        }
-
-        // Format date
-        function formatDate(timestamp) {
-            if (!timestamp) return "N/A";
-            const date = new Date(timestamp);
-            return date.toLocaleDateString() + " " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        }
-
-        // Show loading spinner
-        function showLoading(message = "Loading...") {
-            document.getElementById('loadingSpinner').classList.remove('hidden');
-            document.querySelector('#loadingSpinner p').textContent = message;
-        }
-
-        // Hide loading spinner
-        function hideLoading() {
-            document.getElementById('loadingSpinner').classList.add('hidden');
-        }
-
-        // Check for maintenance mode
-        function checkMaintenance() {
-            db.ref('settings/maintenanceMode').on('value', snap => {
-                if (snap.val() === true) {
-                    document.getElementById('maintenanceBanner').classList.remove('hidden');
-                } else {
-                    document.getElementById('maintenanceBanner').classList.add('hidden');
+                if (!method || !account) {
+                    showError("Please select payment method and enter account number");
+                    return;
                 }
-            });
-        }
-
-        // Check for referral code in URL
-        function checkReferral() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const refCode = urlParams.get('ref');
-            
-            if (refCode) {
-                document.getElementById('signupReferral').value = refCode;
+                
+                // Update payment method
+                db.ref('users/' + currentUser.username).update({
+                    paymentMethod: method,
+                    paymentAccount: account,
+                    lastActivity: Date.now()
+                }).then(() => {
+                    // Update local user data
+                    currentUser.paymentMethod = method;
+                    currentUser.paymentAccount = account;
+                    localStorage.setItem('miningUser', JSON.stringify(currentUser));
+                    
+                    // Hide modal and show success
+                    hideUpdatePaymentModal();
+                    showSuccess("Payment method updated successfully! 💳");
+                    
+                    // Record activity
+                    db.ref('userLogs/' + Date.now()).set({
+                        user: currentUser.username,
+                        action: "payment_update",
+                        details: `Updated to ${method}: ${account}`,
+                        timestamp: Date.now()
+                    });
+                }).catch(error => {
+                    showError("Error updating payment method: " + error.message);
+                });
             }
-        }
 
-        // Initialize the app
-        function initApp() {
-            // Check maintenance
-            checkMaintenance();
-            checkReferral();
-            
-            // Check auth
-            checkAuth();
-            
-            // Smooth scrolling for navigation
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    document.querySelector(this.getAttribute('href')).scrollIntoView({
-                        behavior: 'smooth'
+            // Complete a task
+            function completeTask(taskType) {
+                if (!currentUser) return;
+                
+                currentTask = taskType;
+                
+                // Show verification modal
+                document.getElementById('telegramVerification').classList.add('d-none');
+                document.getElementById('facebookVerification').classList.add('d-none');
+                
+                if (taskType === 'telegram') {
+                    document.getElementById('telegramVerification').classList.remove('d-none');
+                } else if (taskType === 'facebook') {
+                    document.getElementById('facebookVerification').classList.remove('d-none');
+                }
+                
+                taskVerificationModal.show();
+            }
+
+            // Submit task verification
+            function submitTaskVerification() {
+                if (!currentUser || !currentTask) return;
+                
+                let verificationData = {};
+                let taskName = '';
+                let taskDescription = '';
+                let reward = 0;
+                
+                if (currentTask === 'telegram') {
+                    const username = document.getElementById('telegramUsername').value.trim();
+                    if (!username) {
+                        showError("Please enter your Telegram username");
+                        return;
+                    }
+                    
+                    verificationData = {
+                        username: username
+                    };
+                    taskName = "Follow on Telegram";
+                    taskDescription = "Follow our official Telegram channel";
+                    reward = 5;
+                } else if (currentTask === 'facebook') {
+                    const profile = document.getElementById('facebookProfile').value.trim();
+                    if (!profile) {
+                        showError("Please enter your Facebook profile link");
+                        return;
+                    }
+                    
+                    verificationData = {
+                        profile: profile
+                    };
+                    taskName = "Join Facebook Group";
+                    taskDescription = "Join our Facebook community";
+                    reward = 5;
+                }
+                
+                // Submit task for verification
+                const taskId = Date.now();
+                db.ref('taskVerifications/' + taskId).set({
+                    user: currentUser.username,
+                    task: currentTask,
+                    data: verificationData,
+                    reward: reward,
+                    status: "pending",
+                    submittedAt: Date.now()
+                }).then(() => {
+                    // Hide modal and show success
+                    taskVerificationModal.hide();
+                    showSuccess("Task submitted for verification! An admin will review it soon. ⏳");
+                    
+                    // Clear form
+                    if (currentTask === 'telegram') {
+                        document.getElementById('telegramUsername').value = '';
+                    } else if (currentTask === 'facebook') {
+                        document.getElementById('facebookProfile').value = '';
+                    }
+                    
+                    currentTask = null;
+                }).catch(error => {
+                    showError("Error submitting task: " + error.message);
+                });
+            }
+
+            // Show emoji rain effect
+            function showEmojiRain() {
+                const container = document.getElementById('emojiRain');
+                container.innerHTML = '';
+                
+                for (let i = 0; i < 50; i++) {
+                    setTimeout(() => {
+                        const emoji = document.createElement('div');
+                        emoji.className = 'coin-animation';
+                        emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                        emoji.style.left = Math.random() * 100 + 'vw';
+                        emoji.style.animationDuration = 3 + Math.random() * 3 + 's';
+                        container.appendChild(emoji);
+                        
+                        // Remove emoji after animation completes
+                        setTimeout(() => {
+                            emoji.remove();
+                        }, 4000);
+                    }, i * 100);
+                }
+            }
+
+            // Format date
+            function formatDate(timestamp) {
+                if (!timestamp) return "N/A";
+                const date = new Date(timestamp);
+                return date.toLocaleDateString() + " " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            }
+
+            // Check for maintenance mode
+            function checkMaintenance() {
+                db.ref('settings/maintenanceMode').on('value', snap => {
+                    if (snap.val() === true) {
+                        document.getElementById('maintenanceOverlay').classList.remove('d-none');
+                        document.getElementById('homeContent').classList.add('d-none');
+                        document.getElementById('dashboardContent').classList.add('d-none');
+                    } else {
+                        document.getElementById('maintenanceOverlay').classList.add('d-none');
+                    }
+                });
+                
+                // Check maintenance time
+                db.ref('settings/maintenanceTime').once('value').then(snap => {
+                    if (snap.exists()) {
+                        document.getElementById('maintenanceTime').textContent = snap.val();
+                    }
+                });
+            }
+
+            // Get user count
+            function getUserCount() {
+                db.ref('userCount').once('value').then(snap => {
+                    const count = snap.val();
+                    if (count) {
+                        document.getElementById('userCount').textContent = count.toLocaleString() + '+';
+                    }
+                });
+            }
+
+            // Check for referral code in URL
+            function checkReferral() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const refCode = urlParams.get('ref');
+                
+                if (refCode) {
+                    document.getElementById('signupReferral').value = refCode;
+                }
+            }
+
+            // Initialize the app
+            function initApp() {
+                // Check maintenance
+                checkMaintenance();
+                checkReferral();
+                getUserCount();
+                
+                // Check auth
+                checkAuth();
+                
+                // Smooth scrolling for navigation
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        document.querySelector(this.getAttribute('href')).scrollIntoView({
+                            behavior: 'smooth'
+                        });
                     });
                 });
-            });
-        }
-
-        // Initialize when DOM is loaded
-        document.addEventListener('DOMContentLoaded', initApp);
-    </script>
-</body>
-</html>
+            }
+        </script>
+    </body>
+    </html>
