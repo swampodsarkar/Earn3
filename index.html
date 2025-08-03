@@ -478,6 +478,75 @@
             background-color: #dbeafe;
             color: #3b82f6;
         }
+        
+        /* Banned user overlay */
+        .banned-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .banned-content {
+            background-color: #1f2937;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 600px;
+            width: 90%;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .banned-icon {
+            font-size: 4rem;
+            color: #ef4444;
+            margin-bottom: 1.5rem;
+            animation: pulse 1.5s infinite;
+        }
+        
+        /* Admin task section */
+        .admin-task-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        /* Task verification status */
+        .verification-status {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .verification-pending {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+        
+        .verification-approved {
+            background-color: #d1fae5;
+            color: var(--success-color);
+        }
+        
+        .verification-rejected {
+            background-color: #fee2e2;
+            color: var(--danger-color);
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -500,6 +569,26 @@
         </div>
     </div>
     
+    <!-- Banned User Overlay (Hidden by default) -->
+    <div id="bannedOverlay" class="banned-overlay d-none">
+        <div class="banned-content animate__animated animate__fadeIn">
+            <div class="banned-icon">
+                <i class="fas fa-ban"></i>
+            </div>
+            <h2 class="display-5 fw-bold mb-3 text-danger">Account Banned</h2>
+            <p class="fs-5 mb-4">Your account has been suspended due to violation of our terms of service.</p>
+            <p class="mb-4">If you believe this is a mistake, please contact our support team with your account details.</p>
+            <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+                <button onclick="contactSupportFromBan()" class="btn btn-primary">
+                    <i class="fas fa-headset me-2"></i> Contact Support
+                </button>
+                <button onclick="logoutFromBan()" class="btn btn-outline-light">
+                    <i class="fas fa-sign-out-alt me-2"></i> Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark gradient-bg shadow-sm sticky-top">
         <div class="container">
@@ -950,36 +1039,7 @@
                 <div class="tab-content" id="tasksTabContent">
                     <div class="tab-pane fade show active" id="available" role="tabpanel">
                         <div class="row g-4" id="availableTasks">
-                            <div class="col-md-6 animate__animated animate__fadeInUp">
-                                <div class="card task-card pending h-100">
-                                    <div class="card-body p-4">
-                                        <div class="d-flex justify-content-between align-items-start mb-3">
-                                            <h3 class="fw-bold fs-5 mb-0">Follow on Telegram</h3>
-                                            <span class="task-reward">+5 GE</span>
-                                        </div>
-                                        <p class="text-muted mb-3">Follow our official Telegram channel to get updates and bonuses</p>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="task-status task-status-pending">Pending Verification</span>
-                                            <button onclick="completeTask('telegram')" class="btn btn-sm btn-primary">Complete Task</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 animate__animated animate__fadeInUp">
-                                <div class="card task-card pending h-100">
-                                    <div class="card-body p-4">
-                                        <div class="d-flex justify-content-between align-items-start mb-3">
-                                            <h3 class="fw-bold fs-5 mb-0">Join Facebook Group</h3>
-                                            <span class="task-reward">+5 GE</span>
-                                        </div>
-                                        <p class="text-muted mb-3">Join our Facebook community and stay updated with latest news</p>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="task-status task-status-pending">Pending Verification</span>
-                                            <button onclick="completeTask('facebook')" class="btn btn-sm btn-primary">Complete Task</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <!-- Tasks will be loaded dynamically -->
                         </div>
                     </div>
                     <div class="tab-pane fade" id="completed" role="tabpanel">
@@ -1532,6 +1592,18 @@
             supportModal.hide();
         }
 
+        // Contact support from banned screen
+        function contactSupportFromBan() {
+            document.getElementById('bannedOverlay').classList.add('d-none');
+            showSupportModal();
+        }
+
+        // Logout from banned screen
+        function logoutFromBan() {
+            document.getElementById('bannedOverlay').classList.add('d-none');
+            userLogout();
+        }
+
         // Send support message
         function sendSupportMessage() {
             if (!currentUser) return;
@@ -1583,18 +1655,42 @@
             const user = localStorage.getItem('miningUser');
             if (user) {
                 currentUser = JSON.parse(user);
-                showDashboard();
-                startMining();
-                loadUserData();
+                
+                // Check if user is banned
+                db.ref('users/' + currentUser.username).once('value').then(snap => {
+                    const userData = snap.val();
+                    if (userData && userData.status === 'banned') {
+                        showBannedScreen();
+                        return;
+                    }
+                    
+                    showDashboard();
+                    startMining();
+                    loadUserData();
+                }).catch(error => {
+                    console.error("Error checking user status:", error);
+                    showHomepage();
+                });
             } else {
                 showHomepage();
             }
+        }
+
+        // Show banned screen
+        function showBannedScreen() {
+            document.getElementById('bannedOverlay').classList.remove('d-none');
+            document.getElementById('homeContent').classList.add('d-none');
+            document.getElementById('dashboardContent').classList.add('d-none');
+            
+            // Stop any mining
+            stopMining();
         }
 
         // Show homepage
         function showHomepage() {
             document.getElementById('homeContent').classList.remove('d-none');
             document.getElementById('dashboardContent').classList.add('d-none');
+            document.getElementById('bannedOverlay').classList.add('d-none');
             document.getElementById('navLinks').innerHTML = `
                 <li class="nav-item">
                     <a class="nav-link" href="#home"><i class="fas fa-home me-1"></i> Home</a>
@@ -1623,6 +1719,7 @@
         function showDashboard() {
             document.getElementById('homeContent').classList.add('d-none');
             document.getElementById('dashboardContent').classList.remove('d-none');
+            document.getElementById('bannedOverlay').classList.add('d-none');
             document.getElementById('navLinks').innerHTML = `
                 <li class="nav-item">
                     <a class="nav-link" href="#mining"><i class="fas fa-digging me-1"></i> Mining</a>
@@ -1670,7 +1767,12 @@
                 }
                 
                 if (user.status === 'banned') {
-                    throw new Error("Your account has been banned. Please contact support.");
+                    // Show banned screen
+                    localStorage.setItem('miningUser', JSON.stringify(user));
+                    currentUser = user;
+                    hideAuthModal();
+                    showBannedScreen();
+                    return;
                 }
                 
                 // Update last login
@@ -1761,167 +1863,208 @@
                 return user;
             }).then(user => {
                 // Store user data in localStorage
-                    localStorage.setItem('miningUser', JSON.stringify(user));
-                    currentUser = user;
-                    // Hide modal and show dashboard
-                    hideAuthModal();
-                    showDashboard();
-                    startMining();
-                    loadUserData();
-                    showEmojiRain();
-                    showSuccess("Account created successfully! Happy mining! ⛏️");
-                }).catch(error => {
-                    showError(error.message);
+                localStorage.setItem('miningUser', JSON.stringify(user));
+                currentUser = user;
+                // Hide modal and show dashboard
+                hideAuthModal();
+                showDashboard();
+                startMining();
+                loadUserData();
+                showEmojiRain();
+                showSuccess("Account created successfully! Happy mining! ⛏️");
+                
+                // Update user count
+                return db.ref('userCount').transaction(count => {
+                    return (count || 0) + 1;
                 });
-            }
+            }).catch(error => {
+                showError(error.message);
+            });
+        }
 
-            // User logout
-            function userLogout() {
-                if (currentUser) {
-                    // Record logout activity
-                    db.ref('userLogs/' + Date.now()).set({
-                        user: currentUser.username,
-                        action: "logout",
-                        timestamp: Date.now()
-                    });
-                    
-                    // Stop mining
-                    stopMining();
-                    
-                    // Clear user data
-                    currentUser = null;
-                    localStorage.removeItem('miningUser');
-                    
-                    // Show homepage
-                    showHomepage();
-                    showSuccess("Logged out successfully. See you soon! 👋");
-                }
-            }
-
-            // Generate referral code
-            function generateReferralCode(username) {
-                const randomNum = Math.floor(1000 + Math.random() * 9000);
-                return username.slice(0, 3).toUpperCase() + randomNum;
-            }
-
-            // Start mining
-            function startMining() {
-                if (!currentUser || miningInterval) return;
-                
-                // Update mining rate display
-                document.getElementById('miningRate').textContent = miningRate.toFixed(6) + ' GE/s';
-                
-                // Start mining interval
-                let progress = 0;
-                miningInterval = setInterval(() => {
-                    // Update progress bar
-                    progress = (progress + 1) % 100;
-                    document.getElementById('miningProgressBar').style.width = progress + '%';
-                    document.getElementById('miningProgressText').textContent = progress + '%';
-                    
-                    // Add coins to balance (every second)
-                    if (progress % 10 === 0) {
-                        addMiningReward();
-                    }
-                }, 100);
-            }
-
-            // Stop mining
-            function stopMining() {
-                if (miningInterval) {
-                    clearInterval(miningInterval);
-                    miningInterval = null;
-                }
-            }
-
-            // Add mining reward to user balance
-            function addMiningReward() {
-                if (!currentUser) return;
-                
-                const reward = miningRate;
-                
-                // Update user balance in database
-                db.ref('users/' + currentUser.username).transaction(user => {
-                    if (user) {
-                        user.balance = (user.balance || 0) + reward;
-                        user.totalEarned = (user.totalEarned || 0) + reward;
-                        user.lastActivity = Date.now();
-                        
-                        // If user was referred by someone, add referral bonus
-                        if (user.referredBy) {
-                            db.ref('users').orderByChild('referralCode').equalTo(user.referredBy).once('value').then(snap => {
-                                const referrer = snap.val();
-                                if (referrer) {
-                                    const referrerUsername = Object.keys(referrer)[0];
-                                    const referralReward = reward * referralBonus;
-                                    
-                                    // Update referrer's balance
-                                    db.ref('users/' + referrerUsername).transaction(refUser => {
-                                        if (refUser) {
-                                            refUser.balance = (refUser.balance || 0) + referralReward;
-                                            refUser.referralEarnings = (refUser.referralEarnings || 0) + referralReward;
-                                            refUser.totalEarned = (refUser.totalEarned || 0) + referralReward;
-                                        }
-                                        return refUser;
-                                    });
-                                }
-                            });
-                        }
-                    }
-                    return user;
-                }).then(() => {
-                    // Update UI
-                    loadUserData();
+        // User logout
+        function userLogout() {
+            if (currentUser) {
+                // Record logout activity
+                db.ref('userLogs/' + Date.now()).set({
+                    user: currentUser.username,
+                    action: "logout",
+                    timestamp: Date.now()
                 });
-            }
-
-            // Load user data
-            function loadUserData() {
-                if (!currentUser) return;
                 
-                // Get updated user data
-                db.ref('users/' + currentUser.username).once('value').then(snap => {
-                    const user = snap.val();
-                    if (!user) return;
+                // Stop mining
+                stopMining();
+                
+                // Clear user data
+                currentUser = null;
+                localStorage.removeItem('miningUser');
+                
+                // Show homepage
+                showHomepage();
+                showSuccess("Logged out successfully. See you soon! 👋");
+            }
+        }
+
+        // Generate referral code
+        function generateReferralCode(username) {
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            return username.slice(0, 3).toUpperCase() + randomNum;
+        }
+
+        // Start mining
+        function startMining() {
+            if (!currentUser || miningInterval) return;
+            
+            // Update mining rate display
+            document.getElementById('miningRate').textContent = miningRate.toFixed(6) + ' GE/s';
+            
+            // Start mining interval
+            let progress = 0;
+            miningInterval = setInterval(() => {
+                // Update progress bar
+                progress = (progress + 1) % 100;
+                document.getElementById('miningProgressBar').style.width = progress + '%';
+                document.getElementById('miningProgressText').textContent = progress + '%';
+                
+                // Add coins to balance (every second)
+                if (progress % 10 === 0) {
+                    addMiningReward();
+                }
+            }, 100);
+        }
+
+        // Stop mining
+        function stopMining() {
+            if (miningInterval) {
+                clearInterval(miningInterval);
+                miningInterval = null;
+            }
+        }
+
+        // Add mining reward to user balance
+        function addMiningReward() {
+            if (!currentUser) return;
+            
+            const reward = miningRate;
+            
+            // Update user balance in database
+            db.ref('users/' + currentUser.username).transaction(user => {
+                if (user) {
+                    user.balance = (user.balance || 0) + reward;
+                    user.totalEarned = (user.totalEarned || 0) + reward;
+                    user.lastActivity = Date.now();
                     
-                    currentUser = {
-                        ...currentUser,
-                        ...user
-                    };
+                    // If user was referred by someone, add referral bonus
+                    if (user.referredBy) {
+                        db.ref('users').orderByChild('referralCode').equalTo(user.referredBy).once('value').then(snap => {
+                            const referrer = snap.val();
+                            if (referrer) {
+                                const referrerUsername = Object.keys(referrer)[0];
+                                const referralReward = reward * referralBonus;
+                                
+                                // Update referrer's balance
+                                db.ref('users/' + referrerUsername).transaction(refUser => {
+                                    if (refUser) {
+                                        refUser.balance = (refUser.balance || 0) + referralReward;
+                                        refUser.referralEarnings = (refUser.referralEarnings || 0) + referralReward;
+                                        refUser.totalEarned = (refUser.totalEarned || 0) + referralReward;
+                                    }
+                                    return refUser;
+                                });
+                            }
+                        });
+                    }
+                }
+                return user;
+            }).then(() => {
+                // Update UI
+                loadUserData();
+            });
+        }
+
+        // Load user data
+        function loadUserData() {
+            if (!currentUser) return;
+            
+            // Get updated user data
+            db.ref('users/' + currentUser.username).once('value').then(snap => {
+                const user = snap.val();
+                if (!user) return;
+                
+                currentUser = {
+                    ...currentUser,
+                    ...user
+                };
+                
+                // Save to localStorage
+                localStorage.setItem('miningUser', JSON.stringify(currentUser));
+                
+                // Update profile info
+                document.getElementById('profileUsername').textContent = user.username;
+                document.getElementById('profileEmail').textContent = user.email || 'Not set';
+                document.getElementById('profileJoined').textContent = formatDate(user.joinedAt);
+                document.getElementById('profileLastActive').textContent = formatDate(user.lastActivity);
+                document.getElementById('profileReferralCode').textContent = user.referralCode || 'N/A';
+                
+                // Update status badge
+                const statusBadge = document.getElementById('profileStatus');
+                statusBadge.className = 'status-badge ' + (user.status === 'active' ? 'status-approved' : 'status-pending');
+                statusBadge.textContent = user.status || 'active';
+                
+                // Update balance displays
+                document.getElementById('currentBalance').textContent = user.balance.toFixed(6) + ' GE';
+                document.getElementById('profileBalance').textContent = user.balance.toFixed(6) + ' GE';
+                document.getElementById('profileTotalEarned').textContent = user.totalEarned.toFixed(6) + ' GE';
+                document.getElementById('profileTotalWithdrawn').textContent = user.totalWithdrawn.toFixed(6) + ' GE';
+                document.getElementById('withdrawBalance').textContent = user.balance.toFixed(6) + ' GE ($' + (user.balance * coinValue).toFixed(2) + ')';
+                document.getElementById('headerBalance').textContent = user.balance.toFixed(6) + ' GE';
+                
+                // Update today's earnings (simplified - in real app would calculate from logs)
+                document.getElementById('todayEarnings').textContent = (miningRate * 60 * 60 * 24).toFixed(6) + ' GE ($' + (miningRate * 60 * 60 * 24 * coinValue).toFixed(2) + ')';
+                document.getElementById('totalEarnings').textContent = user.totalEarned.toFixed(6) + ' GE ($' + (user.totalEarned * coinValue).toFixed(2) + ')';
+                
+                // Update referral stats
+                document.getElementById('profileReferralEarnings').textContent = user.referralEarnings.toFixed(6) + ' GE';
+                document.getElementById('profileReferrals').textContent = user.referrals || '0';
+                
+                // Update referral link
+                document.getElementById('referralLink').value = window.location.origin + window.location.pathname + '?ref=' + user.referralCode;
+                
+                // Load available tasks
+                return db.ref('availableTasks').once('value').then(snap => {
+                    const tasks = snap.val() || {};
+                    const availableTasksContainer = document.getElementById('availableTasks');
+                    availableTasksContainer.innerHTML = '';
                     
-                    // Save to localStorage
-                    localStorage.setItem('miningUser', JSON.stringify(currentUser));
-                    
-                    // Update profile info
-                    document.getElementById('profileUsername').textContent = user.username;
-                    document.getElementById('profileEmail').textContent = user.email || 'Not set';
-                    document.getElementById('profileJoined').textContent = formatDate(user.joinedAt);
-                    document.getElementById('profileLastActive').textContent = formatDate(user.lastActivity);
-                    document.getElementById('profileReferralCode').textContent = user.referralCode || 'N/A';
-                    
-                    // Update status badge
-                    const statusBadge = document.getElementById('profileStatus');
-                    statusBadge.className = 'status-badge ' + (user.status === 'active' ? 'status-approved' : 'status-pending');
-                    statusBadge.textContent = user.status || 'active';
-                    
-                    // Update balance displays
-                    document.getElementById('currentBalance').textContent = user.balance.toFixed(6) + ' GE';
-                    document.getElementById('profileBalance').textContent = user.balance.toFixed(6) + ' GE';
-                    document.getElementById('profileTotalEarned').textContent = user.totalEarned.toFixed(6) + ' GE';
-                    document.getElementById('profileTotalWithdrawn').textContent = user.totalWithdrawn.toFixed(6) + ' GE';
-                    document.getElementById('withdrawBalance').textContent = user.balance.toFixed(6) + ' GE ($' + (user.balance * coinValue).toFixed(2) + ')';
-                    document.getElementById('headerBalance').textContent = user.balance.toFixed(6) + ' GE';
-                    
-                    // Update today's earnings (simplified - in real app would calculate from logs)
-                    document.getElementById('todayEarnings').textContent = (miningRate * 60 * 60 * 24).toFixed(6) + ' GE ($' + (miningRate * 60 * 60 * 24 * coinValue).toFixed(2) + ')';
-                    document.getElementById('totalEarnings').textContent = user.totalEarned.toFixed(6) + ' GE ($' + (user.totalEarned * coinValue).toFixed(2) + ')';
-                    
-                    // Update referral stats
-                    document.getElementById('profileReferralEarnings').textContent = user.referralEarnings.toFixed(6) + ' GE';
-                    document.getElementById('profileReferrals').textContent = user.referrals || '0';
-                    
-                    // Update referral link
-                    document.getElementById('referralLink').value = window.location.origin + window.location.pathname + '?ref=' + user.referralCode;
+                    if (Object.keys(tasks).length === 0) {
+                        availableTasksContainer.innerHTML = `
+                            <div class="col-12">
+                                <p class="text-muted text-center py-4">No available tasks at the moment</p>
+                            </div>
+                        `;
+                    } else {
+                        Object.keys(tasks).forEach(taskId => {
+                            const task = tasks[taskId];
+                            const col = document.createElement('div');
+                            col.className = "col-md-6";
+                            col.innerHTML = `
+                                <div class="card task-card pending h-100">
+                                    <div class="card-body p-4">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <h3 class="fw-bold fs-5 mb-0">${task.name}</h3>
+                                            <span class="task-reward">+${task.reward} GE</span>
+                                        </div>
+                                        <p class="text-muted mb-3">${task.description}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="task-status task-status-pending">Available</span>
+                                            <button onclick="completeTask('${taskId}')" class="btn btn-sm btn-primary">Complete Task</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            availableTasksContainer.appendChild(col);
+                        });
+                    }
                     
                     // Load referrals list
                     if (user.referralCode) {
@@ -2038,406 +2181,423 @@
                     console.error("Error loading user data:", error);
                     showError("Error loading user data. Please refresh the page.");
                 });
-            }
+            });
+        }
 
-            // Copy referral link
-            function copyReferralLink() {
-                if (!currentUser) return;
-                
-                const referralLink = document.getElementById('referralLink');
-                referralLink.select();
-                document.execCommand('copy');
-                
-                showSuccess("Referral link copied to clipboard! 📋");
-            }
+        // Copy referral link
+        function copyReferralLink() {
+            if (!currentUser) return;
+            
+            const referralLink = document.getElementById('referralLink');
+            referralLink.select();
+            document.execCommand('copy');
+            
+            showSuccess("Referral link copied to clipboard! 📋");
+        }
 
-            // Share on Facebook
-            function shareOnFacebook() {
-                if (!currentUser) return;
-                
-                const link = document.getElementById('referralLink').value;
-                const text = `Join GE Coin Mining and start earning cryptocurrency! Use my referral link: ${link}`;
-                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}&quote=${encodeURIComponent(text)}`, '_blank');
-            }
+        // Share on Facebook
+        function shareOnFacebook() {
+            if (!currentUser) return;
+            
+            const link = document.getElementById('referralLink').value;
+            const text = `Join GE Coin Mining and start earning cryptocurrency! Use my referral link: ${link}`;
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}&quote=${encodeURIComponent(text)}`, '_blank');
+        }
 
-            // Share on WhatsApp
-            function shareOnWhatsApp() {
-                if (!currentUser) return;
-                
-                const link = document.getElementById('referralLink').value;
-                const text = `Join GE Coin Mining and start earning cryptocurrency! Use my referral link: ${link}`;
-                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-            }
+        // Share on WhatsApp
+        function shareOnWhatsApp() {
+            if (!currentUser) return;
+            
+            const link = document.getElementById('referralLink').value;
+            const text = `Join GE Coin Mining and start earning cryptocurrency! Use my referral link: ${link}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        }
 
-            // Share on Twitter
-            function shareOnTwitter() {
-                if (!currentUser) return;
-                
-                const link = document.getElementById('referralLink').value;
-                const text = `Join GE Coin Mining and start earning cryptocurrency! Use my referral link: ${link}`;
-                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
-            }
+        // Share on Twitter
+        function shareOnTwitter() {
+            if (!currentUser) return;
+            
+            const link = document.getElementById('referralLink').value;
+            const text = `Join GE Coin Mining and start earning cryptocurrency! Use my referral link: ${link}`;
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+        }
 
-            // Request withdrawal
-            function requestWithdrawal() {
-                if (!currentUser) return;
-                
-                const method = document.getElementById('withdrawMethod').value;
-                const account = document.getElementById('withdrawAccount').value.trim();
-                const amount = parseFloat(document.getElementById('withdrawAmount').value);
-                
-                if (!method || !account) {
-                    showError("Please select payment method and enter account number");
-                    return;
-                }
-                
-                if (!amount || amount < minWithdrawal) {
-                    showError(`Minimum withdrawal amount is ${minWithdrawal} GE ($${(minWithdrawal * coinValue).toFixed(2)})`);
-                    return;
-                }
-                
-                if (amount > currentUser.balance) {
-                    showError("Insufficient balance");
-                    return;
-                }
-                
-                // Calculate fee and net amount
-                const fee = amount * withdrawalFee;
-                const netAmount = amount - fee;
-                
-                if (confirm(`Request withdrawal of ${amount} GE ($${(amount * coinValue).toFixed(2)})?\nFee: ${fee.toFixed(6)} GE ($${(fee * coinValue).toFixed(2)})\nYou will receive: ${netAmount.toFixed(6)} GE ($${(netAmount * coinValue).toFixed(2)})`)) {
-                    // Create withdrawal request
-                    const withdrawalId = Date.now();
-                    const withdrawal = {
-                        user: currentUser.username,
-                        method: method,
-                        account: account,
-                        amount: amount,
-                        fee: fee,
-                        netAmount: netAmount,
-                        status: "pending",
-                        requestedAt: Date.now(),
-                        processedAt: null,
-                        processedBy: null
-                    };
-                    
-                    // Save withdrawal request
-                    db.ref('withdrawals/' + withdrawalId).set(withdrawal).then(() => {
-                        // Deduct from user balance
-                        return db.ref('users/' + currentUser.username).update({
-                            balance: currentUser.balance - amount,
-                            totalWithdrawn: (currentUser.totalWithdrawn || 0) + amount,
-                            lastActivity: Date.now()
-                        });
-                    }).then(() => {
-                        // Update UI
-                        loadUserData();
-                        showSuccess("Withdrawal request submitted successfully! It will be processed within 24 hours. ⏳");
-                        
-                        // Record activity
-                        db.ref('userLogs/' + Date.now()).set({
-                            user: currentUser.username,
-                            action: "withdrawal_request",
-                            details: `Requested withdrawal of ${amount} GE`,
-                            timestamp: Date.now()
-                        });
-                    }).catch(error => {
-                        showError("Error submitting withdrawal request: " + error.message);
-                    });
-                }
+        // Request withdrawal
+        function requestWithdrawal() {
+            if (!currentUser) return;
+            
+            const method = document.getElementById('withdrawMethod').value;
+            const account = document.getElementById('withdrawAccount').value.trim();
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            
+            if (!method || !account) {
+                showError("Please select payment method and enter account number");
+                return;
             }
-
-            // Show update password modal
-            function showUpdatePasswordModal() {
-                document.getElementById('currentPassword').value = "";
-                document.getElementById('newPassword').value = "";
-                document.getElementById('confirmPassword').value = "";
-                updatePasswordModal.show();
+            
+            if (!amount || amount < minWithdrawal) {
+                showError(`Minimum withdrawal amount is ${minWithdrawal} GE ($${(minWithdrawal * coinValue).toFixed(2)})`);
+                return;
             }
-
-            // Hide update password modal
-            function hideUpdatePasswordModal() {
-                updatePasswordModal.hide();
+            
+            if (amount > currentUser.balance) {
+                showError("Insufficient balance");
+                return;
             }
-
-            // Update password
-            function updatePassword() {
-                if (!currentUser) return;
+            
+            // Calculate fee and net amount
+            const fee = amount * withdrawalFee;
+            const netAmount = amount - fee;
+            
+            if (confirm(`Request withdrawal of ${amount} GE ($${(amount * coinValue).toFixed(2)})?\nFee: ${fee.toFixed(6)} GE ($${(fee * coinValue).toFixed(2)})\nYou will receive: ${netAmount.toFixed(6)} GE ($${(netAmount * coinValue).toFixed(2)})`)) {
+                // Create withdrawal request
+                const withdrawalId = Date.now();
+                const withdrawal = {
+                    user: currentUser.username,
+                    method: method,
+                    account: account,
+                    amount: amount,
+                    fee: fee,
+                    netAmount: netAmount,
+                    status: "pending",
+                    requestedAt: Date.now(),
+                    processedAt: null,
+                    processedBy: null
+                };
                 
-                const currentPass = document.getElementById('currentPassword').value;
-                const newPass = document.getElementById('newPassword').value;
-                const confirmPass = document.getElementById('confirmPassword').value;
-                
-                if (!currentPass || !newPass || !confirmPass) {
-                    showError("Please fill all fields");
-                    return;
-                }
-                
-                if (newPass !== confirmPass) {
-                    showError("New passwords don't match");
-                    return;
-                }
-                
-                if (newPass.length < 6) {
-                    showError("Password must be at least 6 characters");
-                    return;
-                }
-                
-                // Verify current password
-                db.ref('users/' + currentUser.username).once('value').then(snap => {
-                    const user = snap.val();
-                    if (!user || user.password !== currentPass) {
-                        throw new Error("Current password is incorrect");
-                    }
-                    
-                    // Update password
+                // Save withdrawal request
+                db.ref('withdrawals/' + withdrawalId).set(withdrawal).then(() => {
+                    // Deduct from user balance
                     return db.ref('users/' + currentUser.username).update({
-                        password: newPass,
+                        balance: currentUser.balance - amount,
+                        totalWithdrawn: (currentUser.totalWithdrawn || 0) + amount,
                         lastActivity: Date.now()
                     });
                 }).then(() => {
-                    // Update local user data
-                    currentUser.password = newPass;
-                    localStorage.setItem('miningUser', JSON.stringify(currentUser));
-                    
-                    // Hide modal and show success
-                    hideUpdatePasswordModal();
-                    showSuccess("Password updated successfully! 🔒");
+                    // Update UI
+                    loadUserData();
+                    showSuccess("Withdrawal request submitted successfully! It will be processed within 24 hours. ⏳");
                     
                     // Record activity
                     db.ref('userLogs/' + Date.now()).set({
                         user: currentUser.username,
-                        action: "password_change",
+                        action: "withdrawal_request",
+                        details: `Requested withdrawal of ${amount} GE`,
                         timestamp: Date.now()
                     });
                 }).catch(error => {
-                    showError(error.message);
+                    showError("Error submitting withdrawal request: " + error.message);
                 });
             }
+        }
 
-            // Show update payment modal
-            function showUpdatePaymentModal() {
-                document.getElementById('paymentMethod').value = currentUser.paymentMethod || 'bkash';
-                document.getElementById('paymentAccount').value = currentUser.paymentAccount || '';
-                updatePaymentModal.show();
+        // Show update password modal
+        function showUpdatePasswordModal() {
+            document.getElementById('currentPassword').value = "";
+            document.getElementById('newPassword').value = "";
+            document.getElementById('confirmPassword').value = "";
+            updatePasswordModal.show();
+        }
+
+        // Hide update password modal
+        function hideUpdatePasswordModal() {
+            updatePasswordModal.hide();
+        }
+
+        // Update password
+        function updatePassword() {
+            if (!currentUser) return;
+            
+            const currentPass = document.getElementById('currentPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+            
+            if (!currentPass || !newPass || !confirmPass) {
+                showError("Please fill all fields");
+                return;
             }
-
-            // Hide update payment modal
-            function hideUpdatePaymentModal() {
-                updatePaymentModal.hide();
+            
+            if (newPass !== confirmPass) {
+                showError("New passwords don't match");
+                return;
             }
-
-            // Update payment method
-            function updatePaymentMethod() {
-                if (!currentUser) return;
-                
-                const method = document.getElementById('paymentMethod').value;
-                const account = document.getElementById('paymentAccount').value.trim();
-                
-                if (!method || !account) {
-                    showError("Please select payment method and enter account number");
-                    return;
+            
+            if (newPass.length < 6) {
+                showError("Password must be at least 6 characters");
+                return;
+            }
+            
+            // Verify current password
+            db.ref('users/' + currentUser.username).once('value').then(snap => {
+                const user = snap.val();
+                if (!user || user.password !== currentPass) {
+                    throw new Error("Current password is incorrect");
                 }
                 
-                // Update payment method
-                db.ref('users/' + currentUser.username).update({
-                    paymentMethod: method,
-                    paymentAccount: account,
+                // Update password
+                return db.ref('users/' + currentUser.username).update({
+                    password: newPass,
                     lastActivity: Date.now()
-                }).then(() => {
-                    // Update local user data
-                    currentUser.paymentMethod = method;
-                    currentUser.paymentAccount = account;
-                    localStorage.setItem('miningUser', JSON.stringify(currentUser));
-                    
-                    // Hide modal and show success
-                    hideUpdatePaymentModal();
-                    showSuccess("Payment method updated successfully! 💳");
-                    
-                    // Record activity
-                    db.ref('userLogs/' + Date.now()).set({
-                        user: currentUser.username,
-                        action: "payment_update",
-                        details: `Updated to ${method}: ${account}`,
-                        timestamp: Date.now()
-                    });
-                }).catch(error => {
-                    showError("Error updating payment method: " + error.message);
                 });
-            }
-
-            // Complete a task
-            function completeTask(taskType) {
-                if (!currentUser) return;
+            }).then(() => {
+                // Update local user data
+                currentUser.password = newPass;
+                localStorage.setItem('miningUser', JSON.stringify(currentUser));
                 
-                currentTask = taskType;
+                // Hide modal and show success
+                hideUpdatePasswordModal();
+                showSuccess("Password updated successfully! 🔒");
+                
+                // Record activity
+                db.ref('userLogs/' + Date.now()).set({
+                    user: currentUser.username,
+                    action: "password_change",
+                    timestamp: Date.now()
+                });
+            }).catch(error => {
+                showError(error.message);
+            });
+        }
+
+        // Show update payment modal
+        function showUpdatePaymentModal() {
+            document.getElementById('paymentMethod').value = currentUser.paymentMethod || 'bkash';
+            document.getElementById('paymentAccount').value = currentUser.paymentAccount || '';
+            updatePaymentModal.show();
+        }
+
+        // Hide update payment modal
+        function hideUpdatePaymentModal() {
+            updatePaymentModal.hide();
+        }
+
+        // Update payment method
+        function updatePaymentMethod() {
+            if (!currentUser) return;
+            
+            const method = document.getElementById('paymentMethod').value;
+            const account = document.getElementById('paymentAccount').value.trim();
+            
+            if (!method || !account) {
+                showError("Please select payment method and enter account number");
+                return;
+            }
+            
+            // Update payment method
+            db.ref('users/' + currentUser.username).update({
+                paymentMethod: method,
+                paymentAccount: account,
+                lastActivity: Date.now()
+            }).then(() => {
+                // Update local user data
+                currentUser.paymentMethod = method;
+                currentUser.paymentAccount = account;
+                localStorage.setItem('miningUser', JSON.stringify(currentUser));
+                
+                // Hide modal and show success
+                hideUpdatePaymentModal();
+                showSuccess("Payment method updated successfully! 💳");
+                
+                // Record activity
+                db.ref('userLogs/' + Date.now()).set({
+                    user: currentUser.username,
+                    action: "payment_update",
+                    details: `Updated to ${method}: ${account}`,
+                    timestamp: Date.now()
+                });
+            }).catch(error => {
+                showError("Error updating payment method: " + error.message);
+            });
+        }
+
+        // Complete a task
+        function completeTask(taskId) {
+            if (!currentUser) return;
+            
+            // Get task details
+            db.ref('availableTasks/' + taskId).once('value').then(snap => {
+                const task = snap.val();
+                if (!task) {
+                    throw new Error("Task not found");
+                }
+                
+                currentTask = {
+                    id: taskId,
+                    ...task
+                };
                 
                 // Show verification modal
                 document.getElementById('telegramVerification').classList.add('d-none');
                 document.getElementById('facebookVerification').classList.add('d-none');
                 
-                if (taskType === 'telegram') {
+                if (task.type === 'telegram') {
                     document.getElementById('telegramVerification').classList.remove('d-none');
-                } else if (taskType === 'facebook') {
+                } else if (task.type === 'facebook') {
                     document.getElementById('facebookVerification').classList.remove('d-none');
                 }
                 
                 taskVerificationModal.show();
-            }
+            }).catch(error => {
+                showError(error.message);
+            });
+        }
 
-            // Submit task verification
-            function submitTaskVerification() {
-                if (!currentUser || !currentTask) return;
-                
-                let verificationData = {};
-                let taskName = '';
-                let taskDescription = '';
-                let reward = 0;
-                
-                if (currentTask === 'telegram') {
-                    const username = document.getElementById('telegramUsername').value.trim();
-                    if (!username) {
-                        showError("Please enter your Telegram username");
-                        return;
-                    }
-                    
-                    verificationData = {
-                        username: username
-                    };
-                    taskName = "Follow on Telegram";
-                    taskDescription = "Follow our official Telegram channel";
-                    reward = 5;
-                } else if (currentTask === 'facebook') {
-                    const profile = document.getElementById('facebookProfile').value.trim();
-                    if (!profile) {
-                        showError("Please enter your Facebook profile link");
-                        return;
-                    }
-                    
-                    verificationData = {
-                        profile: profile
-                    };
-                    taskName = "Join Facebook Group";
-                    taskDescription = "Join our Facebook community";
-                    reward = 5;
+        // Submit task verification
+        function submitTaskVerification() {
+            if (!currentUser || !currentTask) return;
+            
+            let verificationData = {};
+            
+            if (currentTask.type === 'telegram') {
+                const username = document.getElementById('telegramUsername').value.trim();
+                if (!username) {
+                    showError("Please enter your Telegram username");
+                    return;
                 }
                 
-                // Submit task for verification
-                const taskId = Date.now();
-                db.ref('taskVerifications/' + taskId).set({
-                    user: currentUser.username,
-                    task: currentTask,
-                    data: verificationData,
-                    reward: reward,
-                    status: "pending",
-                    submittedAt: Date.now()
-                }).then(() => {
-                    // Hide modal and show success
-                    taskVerificationModal.hide();
-                    showSuccess("Task submitted for verification! An admin will review it soon. ⏳");
-                    
-                    // Clear form
-                    if (currentTask === 'telegram') {
-                        document.getElementById('telegramUsername').value = '';
-                    } else if (currentTask === 'facebook') {
-                        document.getElementById('facebookProfile').value = '';
-                    }
-                    
-                    currentTask = null;
-                }).catch(error => {
-                    showError("Error submitting task: " + error.message);
-                });
-            }
-
-            // Show emoji rain effect
-            function showEmojiRain() {
-                const container = document.getElementById('emojiRain');
-                container.innerHTML = '';
+                verificationData = {
+                    username: username
+                };
+            } else if (currentTask.type === 'facebook') {
+                const profile = document.getElementById('facebookProfile').value.trim();
+                if (!profile) {
+                    showError("Please enter your Facebook profile link");
+                    return;
+                }
                 
-                for (let i = 0; i < 50; i++) {
+                verificationData = {
+                    profile: profile
+                };
+            }
+            
+            // Submit task for verification
+            const verificationId = Date.now();
+            db.ref('taskVerifications/' + verificationId).set({
+                user: currentUser.username,
+                taskId: currentTask.id,
+                taskName: currentTask.name,
+                taskDescription: currentTask.description,
+                taskType: currentTask.type,
+                verificationData: verificationData,
+                reward: currentTask.reward,
+                status: "pending",
+                submittedAt: Date.now()
+            }).then(() => {
+                // Hide modal and show success
+                taskVerificationModal.hide();
+                showSuccess("Task submitted for verification! An admin will review it soon. ⏳");
+                
+                // Clear form
+                if (currentTask.type === 'telegram') {
+                    document.getElementById('telegramUsername').value = '';
+                } else if (currentTask.type === 'facebook') {
+                    document.getElementById('facebookProfile').value = '';
+                }
+                
+                currentTask = null;
+            }).catch(error => {
+                showError("Error submitting task: " + error.message);
+            });
+        }
+
+        // Show emoji rain effect
+        function showEmojiRain() {
+            const container = document.getElementById('emojiRain');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const emoji = document.createElement('div');
+                    emoji.className = 'coin-animation';
+                    emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                    emoji.style.left = Math.random() * 100 + 'vw';
+                    emoji.style.animationDuration = 3 + Math.random() * 3 + 's';
+                    container.appendChild(emoji);
+                    
+                    // Remove emoji after animation completes
                     setTimeout(() => {
-                        const emoji = document.createElement('div');
-                        emoji.className = 'coin-animation';
-                        emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-                        emoji.style.left = Math.random() * 100 + 'vw';
-                        emoji.style.animationDuration = 3 + Math.random() * 3 + 's';
-                        container.appendChild(emoji);
-                        
-                        // Remove emoji after animation completes
-                        setTimeout(() => {
-                            emoji.remove();
-                        }, 4000);
-                    }, i * 100);
+                        emoji.remove();
+                    }, 4000);
+                }, i * 100);
+            }
+        }
+
+        // Format date
+        function formatDate(timestamp) {
+            if (!timestamp) return "N/A";
+            const date = new Date(timestamp);
+            return date.toLocaleDateString() + " " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        // Check for maintenance mode
+        function checkMaintenance() {
+            db.ref('settings/maintenanceMode').on('value', snap => {
+                if (snap.val() === true) {
+                    document.getElementById('maintenanceOverlay').classList.remove('d-none');
+                    document.getElementById('homeContent').classList.add('d-none');
+                    document.getElementById('dashboardContent').classList.add('d-none');
+                } else {
+                    document.getElementById('maintenanceOverlay').classList.add('d-none');
                 }
-            }
-
-            // Format date
-            function formatDate(timestamp) {
-                if (!timestamp) return "N/A";
-                const date = new Date(timestamp);
-                return date.toLocaleDateString() + " " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            }
-
-            // Check for maintenance mode
-            function checkMaintenance() {
-                db.ref('settings/maintenanceMode').on('value', snap => {
-                    if (snap.val() === true) {
-                        document.getElementById('maintenanceOverlay').classList.remove('d-none');
-                        document.getElementById('homeContent').classList.add('d-none');
-                        document.getElementById('dashboardContent').classList.add('d-none');
-                    } else {
-                        document.getElementById('maintenanceOverlay').classList.add('d-none');
-                    }
-                });
-                
-                // Check maintenance time
-                db.ref('settings/maintenanceTime').once('value').then(snap => {
-                    if (snap.exists()) {
-                        document.getElementById('maintenanceTime').textContent = snap.val();
-                    }
-                });
-            }
-
-            // Get user count
-            function getUserCount() {
-                db.ref('userCount').once('value').then(snap => {
-                    const count = snap.val();
-                    if (count) {
-                        document.getElementById('userCount').textContent = count.toLocaleString() + '+';
-                    }
-                });
-            }
-
-            // Check for referral code in URL
-            function checkReferral() {
-                const urlParams = new URLSearchParams(window.location.search);
-                const refCode = urlParams.get('ref');
-                
-                if (refCode) {
-                    document.getElementById('signupReferral').value = refCode;
+            });
+            
+            // Check maintenance time
+            db.ref('settings/maintenanceTime').once('value').then(snap => {
+                if (snap.exists()) {
+                    document.getElementById('maintenanceTime').textContent = snap.val();
                 }
-            }
+            });
+        }
 
-            // Initialize the app
-            function initApp() {
-                // Check maintenance
-                checkMaintenance();
-                checkReferral();
-                getUserCount();
-                
-                // Check auth
-                checkAuth();
-                
-                // Smooth scrolling for navigation
-                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                    anchor.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        document.querySelector(this.getAttribute('href')).scrollIntoView({
-                            behavior: 'smooth'
-                        });
+        // Get user count
+        function getUserCount() {
+            db.ref('userCount').once('value').then(snap => {
+                const count = snap.val();
+                if (count) {
+                    document.getElementById('userCount').textContent = count.toLocaleString() + '+';
+                }
+            });
+        }
+
+        // Check for referral code in URL
+        function checkReferral() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const refCode = urlParams.get('ref');
+            
+            if (refCode) {
+                document.getElementById('signupReferral').value = refCode;
+            }
+        }
+
+        // Initialize the app
+        function initApp() {
+            // Check maintenance
+            checkMaintenance();
+            checkReferral();
+            getUserCount();
+            
+            // Check auth
+            checkAuth();
+            
+            // Smooth scrolling for navigation
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
                     });
                 });
+            });
+            
+            // Listen for user status changes (in case admin bans while user is logged in)
+            if (currentUser) {
+                db.ref('users/' + currentUser.username + '/status').on('value', snap => {
+                    if (snap.val() === 'banned') {
+                        showBannedScreen();
+                    }
+                });
             }
-        </script>
-    </body>
-    </html>
+        }
+    </script>
+</body>
+</html>
